@@ -133,8 +133,8 @@
         ],
         "dependencies": {
             "implementation": [
-                "com.google.android.gms:play-services-ads:25.3.0",
-                "com.google.android.ump:user-messaging-platform:4.0.0"
+                "com.google.android.gms:play-services-ads:24.0.0",
+                "com.google.android.ump:user-messaging-platform:3.0.0"
             ]
         },
         "meta_data": [

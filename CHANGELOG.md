@@ -6,8 +6,13 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [0.4.0-alpha] - 2026-05-31
 
+### Changed
+
+- **Pinned Android SDK versions to Kotlin-2.0-compatible majors.** `play-services-ads:24.0.0` (last version before the Kotlin 2.1 minimum bump in 24.1.0) and `user-messaging-platform:3.0.0`. NativePHP Mobile v3.3.5 ships a Kotlin 2.0 toolchain; binding to newer AdMob SDKs caused `Module was compiled with an incompatible version of Kotlin` failures at compile time.
+
 ### Added
 
+- **`post_compile` substitution hook** (`nativephp:admob:substitute-placeholders`). NativePHP's compiler writes `${ADMOB_APP_ID}` verbatim into `AndroidManifest.xml` / `Info.plist` rather than resolving it from `getenv()`. The new console command runs after every `native:run` / `native:build` and rewrites known placeholders against the current env. Without it the AdMob SDK fails at boot with "Missing application ID".
 - **Real Banner ad implementation on Android.** `Admob::banner('slot')->load()->show()` now renders a Google AdMob banner via `AdView`, attached to the activity's root view as an overlay. Position can be `'top'` or `'bottom'`. Lifecycle (pause/resume/destroy) is managed via NativePHP's lifecycle hooks.
 - **Real Banner ad implementation on iOS.** `BannerView` (the iOS v13+ rename of `GADBannerView`) wired to the key window via Auto Layout. Following Google's canonical `developers.google.com/admob/ios/banner` reference. **iOS is shipped untested on real hardware — please report issues at the GitHub issue tracker.**
 - `BannerRegistry` (Android + iOS) keyed by slot name, holding both the ad view and its attachment container.
