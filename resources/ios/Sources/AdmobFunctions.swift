@@ -42,7 +42,7 @@ enum AdmobFunctions {
         return keyWindow()?.rootViewController
     }
 
-    private static func dispatch(_ eventClass: String, _ payload: [String: Any]) {
+    static func dispatch(_ eventClass: String, _ payload: [String: Any]) {
         DispatchQueue.main.async {
             LaravelBridge.shared.send?("\(eventBase)\\\(eventClass)", payload)
         }
@@ -154,15 +154,70 @@ enum AdmobFunctions {
     }
 
     class LoadInterstitial: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.LoadInterstitial") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("LoadInterstitial: slot missing")
+            }
+            guard let unitId = parameters["unit_id"] as? String else {
+                return AdmobFunctions.notImplemented("LoadInterstitial: unit_id missing")
+            }
+
+            InterstitialAd.load(with: unitId, request: Request()) { ad, error in
+                if let error = error {
+                    InterstitialRegistry.shared.remove(slot: slot)
+                    let nsError = error as NSError
+                    AdmobFunctions.dispatch("AdFailedToLoad", [
+                        "slot": slot,
+                        "format": "interstitial",
+                        "errorCode": nsError.code,
+                        "errorMessage": error.localizedDescription,
+                    ])
+                    return
+                }
+                guard let ad = ad else { return }
+                let delegate = InterstitialDelegate(slot: slot)
+                ad.fullScreenContentDelegate = delegate
+                InterstitialRegistry.shared.put(slot: slot, ad: ad, delegate: delegate)
+                AdmobFunctions.dispatch("AdLoaded", ["slot": slot, "format": "interstitial"])
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class InterstitialReady: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.InterstitialReady") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("InterstitialReady: slot missing")
+            }
+            return AdmobFunctions.success(["ready": InterstitialRegistry.shared.get(slot: slot) != nil])
+        }
     }
 
     class ShowInterstitial: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.ShowInterstitial") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("ShowInterstitial: slot missing")
+            }
+
+            DispatchQueue.main.async {
+                guard let ad = InterstitialRegistry.shared.get(slot: slot) else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "interstitial", "error": "no_loaded_ad",
+                    ])
+                    return
+                }
+                guard let root = AdmobFunctions.rootViewController() else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "interstitial", "error": "no_root_view_controller",
+                    ])
+                    return
+                }
+                ad.present(from: root)
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class LoadRewarded: BridgeFunction {
