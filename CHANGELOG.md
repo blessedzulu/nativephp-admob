@@ -24,6 +24,10 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 - **All 22 Kotlin bridge function classes now take `FragmentActivity` in their primary constructor** so they match the signature emitted by NativePHP's `AndroidPluginCompiler`. Phase 2's no-arg-constructor stubs would have failed to compile in any consumer's `native:run`; this release fixes that latent bug.
 
+### Fixed
+
+- **Banner load/show race.** PHP fires `Admob.LoadBanner` then `Admob.ShowBanner` synchronously on the bridge thread. `LoadBanner` posts the `AdView` creation to the UI thread and returns immediately, so `ShowBanner`'s registry lookup was hitting an empty slot. Moved the registry lookup into `runOnUiThread { … }` (Android) / `DispatchQueue.main.async { … }` (iOS) so it always lands after Load's queued work. Dispatches `AdShowFailed` (with `error=no_loaded_ad`) if the slot is still empty when the UI tick runs.
+
 ## [0.3.0-alpha] - 2026-05-31
 
 ### Added

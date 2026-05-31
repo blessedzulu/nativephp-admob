@@ -213,6 +213,9 @@
         "init_function": "AdmobInit.initialize",
         "min_version": "18.0"
     },
+    "hooks": {
+        "post_compile": "nativephp:admob:substitute-placeholders"
+    },
     "secrets": {
         "ADMOB_APP_ID": {
             "description": "Your AdMob app ID (format: ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY). Get it at apps.admob.com under App Settings.",

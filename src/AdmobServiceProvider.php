@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BlessedZulu\NativePhpAdmob;
 
+use BlessedZulu\NativePhpAdmob\Commands\SubstituteManifestPlaceholdersCommand;
 use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use BlessedZulu\NativePhpAdmob\Events\ConsentChanged;
 use BlessedZulu\NativePhpAdmob\Support\NativeBridge;
@@ -33,5 +34,11 @@ class AdmobServiceProvider extends ServiceProvider
         Event::listen(ConsentChanged::class, function (ConsentChanged $event) {
             $this->app->make('admob')->onConsentChanged($event->status);
         });
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SubstituteManifestPlaceholdersCommand::class,
+            ]);
+        }
     }
 }
