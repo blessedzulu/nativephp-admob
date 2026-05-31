@@ -81,7 +81,41 @@ php artisan vendor:publish --tag=admob-config
 
 ## PHP Usage
 
-> _Examples below are the target API. Filled in across Phases 1-6._
+### Banner ads (available since v0.4.0-alpha — Android device-tested, iOS untested on hardware)
+
+```php
+use BlessedZulu\NativePhpAdmob\Facades\Admob;
+
+// In a Livewire/Volt component's mount() or wherever you want a banner:
+Admob::banner('calculator_bottom')
+    ->load()
+    ->show('bottom');     // or ->show('top')
+
+// Later, when navigating away or hiding:
+Admob::banner('calculator_bottom')->hide();
+```
+
+Configure the slot in your `.env`:
+
+```dotenv
+ADMOB_ENABLED=true
+ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+ADMOB_BANNER_CALCULATOR_BOTTOM=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+```
+
+Or, if you have many slots, publish the config and edit it inline:
+
+```bash
+php artisan vendor:publish --tag=admob-config
+```
+
+The banner uses Google's **adaptive banner** sizing — the SDK picks the right height for the device. Width is full screen width. Banners are attached to the activity's root view (Android) or key window (iOS) as an overlay, so they don't shift your existing layout.
+
+Test mode is automatic outside `production`. Real ad unit IDs are silently swapped for Google's reserved test IDs, so you can never accidentally show a real ad during development.
+
+### Other formats
+
+> _Interstitial, Rewarded, Rewarded Interstitial, App Open — filled in across Phases 4-6._
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;

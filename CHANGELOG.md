@@ -4,6 +4,21 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0-alpha] - 2026-05-31
+
+### Added
+
+- **Real Banner ad implementation on Android.** `Admob::banner('slot')->load()->show()` now renders a Google AdMob banner via `AdView`, attached to the activity's root view as an overlay. Position can be `'top'` or `'bottom'`. Lifecycle (pause/resume/destroy) is managed via NativePHP's lifecycle hooks.
+- **Real Banner ad implementation on iOS.** `BannerView` (the iOS v13+ rename of `GADBannerView`) wired to the key window via Auto Layout. Following Google's canonical `developers.google.com/admob/ios/banner` reference. **iOS is shipped untested on real hardware — please report issues at the GitHub issue tracker.**
+- `BannerRegistry` (Android + iOS) keyed by slot name, holding both the ad view and its attachment container.
+- `BannerLifecycle` (Android + iOS) subscribing to `NativePHPLifecycle` events / `NotificationCenter` notifications so banners pause / resume / clean up correctly.
+- Banner-side event dispatch for `AdLoaded`, `AdFailedToLoad`, `AdImpression`, `AdClicked`, `AdShown` so Livewire `#[OnNative]` listeners receive ad lifecycle callbacks.
+- Adaptive banner sizing on both platforms using Google's `getCurrentOrientationAnchoredAdaptiveBannerAdSize` (Android) / `currentOrientationAnchoredAdaptiveBanner(width:)` (iOS).
+
+### Changed
+
+- **All 22 Kotlin bridge function classes now take `FragmentActivity` in their primary constructor** so they match the signature emitted by NativePHP's `AndroidPluginCompiler`. Phase 2's no-arg-constructor stubs would have failed to compile in any consumer's `native:run`; this release fixes that latent bug.
+
 ## [0.3.0-alpha] - 2026-05-31
 
 ### Added
