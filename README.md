@@ -155,9 +155,72 @@ ADMOB_INTERSTITIAL_BETWEEN_CALCULATIONS=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
 
 Events dispatched for the interstitial lifecycle: `AdLoaded`, `AdFailedToLoad`, `AdShown`, `AdFailedToShow`, `AdImpression`, `AdClicked`, `AdDismissed`. Listen with `#[OnNative(EventClass::class)]` on any Livewire component.
 
+### Rewarded ads (available since v0.6.0-alpha — Android device-tested, iOS untested on hardware)
+
+```php
+use BlessedZulu\NativePhpAdmob\Facades\Admob;
+use BlessedZulu\NativePhpAdmob\Events\AdDismissed;
+use BlessedZulu\NativePhpAdmob\Events\UserEarnedReward;
+use Native\Mobile\Attributes\OnNative;
+
+// Pre-load when the screen mounts:
+public function mount(): void
+{
+    Admob::rewarded('export_pdf')->load();
+}
+
+// Show in response to a user action ("Watch a video to unlock PDF export"):
+public function onUnlockTapped(): void
+{
+    if (Admob::rewarded('export_pdf')->isReady()) {
+        Admob::rewarded('export_pdf')->show();
+    }
+}
+
+// Grant the reward when the user finishes watching:
+#[OnNative(UserEarnedReward::class)]
+public function onEarned(string $slot, string $format, string $type, int $amount): void
+{
+    if ($slot === 'export_pdf') {
+        $this->unlockPdfExport();
+    }
+}
+
+// Re-load after dismissal:
+#[OnNative(AdDismissed::class)]
+public function onDismissed(string $slot, string $format): void
+{
+    if ($format === 'rewarded') {
+        Admob::rewarded($slot)->load();
+    }
+}
+```
+
+The `UserEarnedReward` event fires ONLY if the user watches to the rewardable threshold. Dismissing early fires `AdDismissed` without `UserEarnedReward`.
+
+Configure the slot:
+
+```dotenv
+ADMOB_REWARDED_EXPORT_PDF=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+```
+
+### Rewarded interstitial ads (available since v0.6.0-alpha)
+
+Same API surface as rewarded, but the ad **auto-plays on entry** with a 5-second skip warning rather than an opt-in "Watch ad" tap. Useful between level transitions where you want to reward continuation without requiring an explicit tap.
+
+```php
+Admob::rewardedInterstitial('between_levels')->load();
+// later…
+if (Admob::rewardedInterstitial('between_levels')->isReady()) {
+    Admob::rewardedInterstitial('between_levels')->show();
+}
+```
+
+`UserEarnedReward` event payload includes `format: 'rewarded_interstitial'` so a single listener can branch.
+
 ### Other formats
 
-> _Rewarded, Rewarded Interstitial, App Open — filled in across Phases 5-6._
+> _App Open — filled in Phase 6._
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;

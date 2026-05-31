@@ -4,6 +4,19 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.6.0-alpha] - 2026-05-31
+
+### Added
+
+- **Real Rewarded ad implementation on Android.** `Admob::rewarded('slot')->load()->show()` presents Google's rewarded video flow. `OnUserEarnedRewardListener` fires the `UserEarnedReward` event with `slot`, `format`, `type`, `amount` on completion. Full lifecycle events (`AdLoaded`, `AdFailedToLoad`, `AdShown`, `AdFailedToShow`, `AdDismissed`, `AdImpression`, `AdClicked`) via `FullScreenContentCallback`.
+- **Real Rewarded Interstitial ad implementation on Android.** Same API as rewarded but with auto-play-on-entry semantics + 5-second skip warning. Useful for between-level transitions.
+- **Real Rewarded + Rewarded Interstitial on iOS.** Both wire `FullScreenContentDelegate` and pass the user-earned-reward closure to `present(from:userDidEarnRewardHandler:)`. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
+- `RewardedRegistry` / `RewardedInterstitialRegistry` (Android + iOS) - slot-keyed maps. iOS variants also retain the delegate alongside the ad since Google's SDK only holds it weakly.
+
+### Changed
+
+- **BREAKING (pre-1.0):** `UserEarnedReward` event constructor signature now includes a `format` field as the second parameter: `__construct(string $slot, string $format, string $type, int $amount)`. Brings the event in line with all other Ad* events. Update any consumers that construct or destructure this event.
+
 ## [0.5.0-alpha] - 2026-05-31
 
 ### Added
