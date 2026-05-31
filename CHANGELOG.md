@@ -4,6 +4,19 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0-alpha] - 2026-05-31
+
+### Added
+
+- **Real Interstitial ad implementation on Android.** `Admob::interstitial('slot')->load()` pre-loads an `InterstitialAd`, `isReady()` reports availability, `show()` presents the full-screen ad. Lifecycle events (`AdLoaded`, `AdFailedToLoad`, `AdShown`, `AdFailedToShow`, `AdDismissed`, `AdImpression`, `AdClicked`) dispatched via `FullScreenContentCallback`.
+- **Real Interstitial ad implementation on iOS.** `InterstitialAd.load(with:request:)` + `FullScreenContentDelegate` wired the same way. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
+- `InterstitialRegistry` (Android + iOS) slot-keyed map of loaded `InterstitialAd` instances. One-shot semantics: the slot is cleared on dismissal or failed-show, so the consumer must `load()` again before the next `show()`.
+- `InterstitialDelegate` (iOS) - retains the `FullScreenContentDelegate` alongside the ad in the registry, since Google's SDK only holds the delegate weakly.
+
+### Fixed
+
+- **`AdShowFailed` dispatch string** renamed to canonical `AdFailedToShow` in `ShowBanner` failure path on both platforms. The PHP event class is `BlessedZulu\NativePhpAdmob\Events\AdFailedToShow`; the string mismatch would have silently swallowed the event for any production listener that did wire it. Phase 3 followup.
+
 ## [0.4.0-alpha] - 2026-05-31
 
 ### Changed

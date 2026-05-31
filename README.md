@@ -113,9 +113,51 @@ The banner uses Google's **adaptive banner** sizing — the SDK picks the right 
 
 Test mode is automatic outside `production`. Real ad unit IDs are silently swapped for Google's reserved test IDs, so you can never accidentally show a real ad during development.
 
+### Interstitial ads (available since v0.5.0-alpha — Android device-tested, iOS untested on hardware)
+
+```php
+use BlessedZulu\NativePhpAdmob\Facades\Admob;
+use BlessedZulu\NativePhpAdmob\Events\AdLoaded;
+use BlessedZulu\NativePhpAdmob\Events\AdDismissed;
+use Native\Mobile\Attributes\OnNative;
+
+// Pre-load when the screen mounts:
+public function mount(): void
+{
+    Admob::interstitial('between_calculations')->load();
+}
+
+// Show when the user finishes a meaningful action:
+public function onCalculationFinished(): void
+{
+    if (Admob::interstitial('between_calculations')->isReady()) {
+        Admob::interstitial('between_calculations')->show();
+    }
+}
+
+// Re-load after dismissal so the next show is ready:
+#[OnNative(AdDismissed::class)]
+public function onDismissed(string $slot, string $format): void
+{
+    if ($format === 'interstitial') {
+        Admob::interstitial($slot)->load();
+    }
+}
+```
+
+Interstitials are **one-shot**: each loaded ad survives until it is shown and dismissed, then the slot must be loaded again. The plugin clears the registry slot on `AdDismissed` and `AdFailedToShow` automatically.
+
+Configure the slot in your `.env`:
+
+```dotenv
+ADMOB_INTERSTITIAL_BETWEEN_CALCULATIONS=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+```
+
+Events dispatched for the interstitial lifecycle: `AdLoaded`, `AdFailedToLoad`, `AdShown`, `AdFailedToShow`, `AdImpression`, `AdClicked`, `AdDismissed`. Listen with `#[OnNative(EventClass::class)]` on any Livewire component.
+
 ### Other formats
 
-> _Interstitial, Rewarded, Rewarded Interstitial, App Open — filled in across Phases 4-6._
+> _Rewarded, Rewarded Interstitial, App Open — filled in across Phases 5-6._
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
