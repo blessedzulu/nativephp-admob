@@ -7,11 +7,15 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentActivity
+import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.nativephp.mobile.bridge.BridgeFunction
 import com.nativephp.mobile.utils.NativeActionCoordinator
 import org.json.JSONObject
@@ -192,15 +196,101 @@ object AdmobFunctions {
     }
 
     class LoadInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("LoadInterstitial: slot missing")
+            val unitId = parameters["unit_id"] as? String ?: return notImplemented("LoadInterstitial: unit_id missing")
+
+            runOnUiThread {
+                InterstitialAd.load(
+                    activity,
+                    unitId,
+                    AdRequest.Builder().build(),
+                    object : InterstitialAdLoadCallback() {
+                        override fun onAdLoaded(ad: InterstitialAd) {
+                            InterstitialRegistry.put(slot, ad)
+                            dispatchEvent(activity, "AdLoaded", mapOf("slot" to slot, "format" to "interstitial"))
+                        }
+
+                        override fun onAdFailedToLoad(error: LoadAdError) {
+                            InterstitialRegistry.remove(slot)
+                            dispatchEvent(
+                                activity,
+                                "AdFailedToLoad",
+                                mapOf(
+                                    "slot" to slot,
+                                    "format" to "interstitial",
+                                    "errorCode" to error.code,
+                                    "errorMessage" to error.message,
+                                ),
+                            )
+                        }
+                    },
+                )
+            }
+
+            return success()
+        }
     }
 
     class InterstitialReady(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.InterstitialReady")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("InterstitialReady: slot missing")
+            return success(mapOf("ready" to (InterstitialRegistry.get(slot) != null)))
+        }
     }
 
     class ShowInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.ShowInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("ShowInterstitial: slot missing")
+
+            runOnUiThread {
+                val ad = InterstitialRegistry.get(slot) ?: run {
+                    dispatchEvent(
+                        activity,
+                        "AdFailedToShow",
+                        mapOf("slot" to slot, "format" to "interstitial", "error" to "no_loaded_ad"),
+                    )
+                    return@runOnUiThread
+                }
+
+                ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdShowedFullScreenContent() {
+                        dispatchEvent(activity, "AdShown", mapOf("slot" to slot, "format" to "interstitial"))
+                    }
+
+                    override fun onAdDismissedFullScreenContent() {
+                        InterstitialRegistry.remove(slot)
+                        dispatchEvent(activity, "AdDismissed", mapOf("slot" to slot, "format" to "interstitial"))
+                    }
+
+                    override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        InterstitialRegistry.remove(slot)
+                        dispatchEvent(
+                            activity,
+                            "AdFailedToShow",
+                            mapOf(
+                                "slot" to slot,
+                                "format" to "interstitial",
+                                "errorCode" to error.code,
+                                "errorMessage" to error.message,
+                            ),
+                        )
+                    }
+
+                    override fun onAdImpression() {
+                        dispatchEvent(activity, "AdImpression", mapOf("slot" to slot, "format" to "interstitial"))
+                    }
+
+                    override fun onAdClicked() {
+                        dispatchEvent(activity, "AdClicked", mapOf("slot" to slot, "format" to "interstitial"))
+                    }
+                }
+
+                ad.show(activity)
+            }
+
+            return success()
+        }
     }
 
     class LoadRewarded(private val activity: FragmentActivity) : BridgeFunction {
