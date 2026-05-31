@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: NativePHP Mobile documentation
+    url: https://nativephp.com/docs/mobile/3
+    about: Upstream docs for the NativePHP Mobile framework itself.
+  - name: Google AdMob documentation
+    url: https://developers.google.com/admob
+    about: Official AdMob SDK docs. The plugin wraps these APIs.

@@ -1,0 +1,91 @@
+name: Bug report
+description: Report a defect in the plugin
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a report. Before submitting, please search existing issues to avoid duplicates.
+  - type: dropdown
+    id: format
+    attributes:
+      label: Ad format affected
+      options:
+        - Banner
+        - Interstitial
+        - Rewarded
+        - Rewarded Interstitial
+        - App Open
+        - UMP (consent)
+        - ATT (iOS tracking)
+        - Configuration / wiring
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - iOS
+        - Android
+        - Both
+        - Not platform-specific
+    validations:
+      required: true
+  - type: input
+    id: nativephp-version
+    attributes:
+      label: NativePHP Mobile version
+      placeholder: e.g. 3.1.4
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: Device + OS version
+      placeholder: e.g. Pixel 8 / Android 14, iPhone 15 / iOS 18.2
+  - type: dropdown
+    id: ad-mode
+    attributes:
+      label: Ad units in use
+      options:
+        - Google test ad units
+        - Production ad units
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Configure '...'
+        2. Call Admob::...
+        3. Observe '...'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste output from `native:tail` (Android) or Xcode console (iOS).
+      render: shell

@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an addition or improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the use case before the proposed API. It helps reviewers spot simpler alternatives.
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What are you trying to do? Why is the current API insufficient?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behaviour
+      description: PHP snippets welcome. Sketch is fine - precision can come later.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else could solve this? Why is the proposal better?
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - PHP API only
+        - Native code (iOS, Android, or both)
+        - Configuration / manifest
+        - Documentation
+        - CI / tooling
+    validations:
+      required: true
