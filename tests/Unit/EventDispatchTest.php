@@ -19,9 +19,10 @@ it('instantiates AdFailedToLoad with the full error payload', function () {
 });
 
 it('carries reward payload on UserEarnedReward', function () {
-    $event = new Events\UserEarnedReward('export_pdf', 'coins', 10);
+    $event = new Events\UserEarnedReward('export_pdf', 'rewarded', 'coins', 10);
 
     expect($event->slot)->toBe('export_pdf')
+        ->and($event->format)->toBe('rewarded')
         ->and($event->type)->toBe('coins')
         ->and($event->amount)->toBe(10);
 });

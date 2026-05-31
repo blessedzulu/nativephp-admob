@@ -23,7 +23,7 @@ it('completes a full rewarded ad lifecycle end to end', function () {
 
     Admob::rewarded('export_pdf')->show();
     $fake->simulateEvent(AdShown::class, ['export_pdf', 'rewarded']);
-    $fake->simulateEvent(UserEarnedReward::class, ['export_pdf', 'coins', 10]);
+    $fake->simulateEvent(UserEarnedReward::class, ['export_pdf', 'rewarded', 'coins', 10]);
 
     Event::assertDispatched(AdLoaded::class);
     Event::assertDispatched(AdShown::class);

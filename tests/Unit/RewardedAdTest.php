@@ -27,11 +27,12 @@ it('dispatches UserEarnedReward when the bridge simulates one', function () {
     $fake = Admob::fake();
 
     Admob::rewarded('export_pdf')->load()->show();
-    $fake->simulateEvent(UserEarnedReward::class, ['export_pdf', 'coins', 10]);
+    $fake->simulateEvent(UserEarnedReward::class, ['export_pdf', 'rewarded', 'coins', 10]);
 
     Event::assertDispatched(
         UserEarnedReward::class,
         fn (UserEarnedReward $e) => $e->slot === 'export_pdf'
+            && $e->format === 'rewarded'
             && $e->type === 'coins'
             && $e->amount === 10
     );

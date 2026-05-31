@@ -14,6 +14,7 @@ class UserEarnedReward
 
     public function __construct(
         public string $slot,
+        public string $format,
         public string $type,
         public int $amount,
     ) {}
