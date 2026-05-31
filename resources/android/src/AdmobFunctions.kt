@@ -35,18 +35,24 @@ object AdmobFunctions {
     private val mainHandler = Handler(Looper.getMainLooper())
     private const val EVENT_BASE = "BlessedZulu\\NativePhpAdmob\\Events"
 
-    private fun notImplemented(name: String): Map<String, Any?> =
-        mapOf("success" to false, "data" to null, "error" to "$name not implemented in v0.4.x.")
+    private fun notImplemented(name: String): Map<String, Any> =
+        mapOf("success" to false, "error" to "$name not implemented in v0.4.x.")
 
-    private fun success(data: Any? = null): Map<String, Any?> =
-        mapOf("success" to true, "data" to data, "error" to null)
+    private fun success(data: Any? = null): Map<String, Any> {
+        val result = mutableMapOf<String, Any>("success" to true)
+        if (data != null) result["data"] = data
+        return result
+    }
+
+    private fun failure(message: String): Map<String, Any> =
+        mapOf("success" to false, "error" to message)
 
     private fun runOnUiThread(block: () -> Unit) {
         if (Looper.myLooper() == Looper.getMainLooper()) block()
         else mainHandler.post { block() }
     }
 
-    private fun dispatchEvent(activity: FragmentActivity, eventClass: String, payload: Map<String, Any?>) {
+    private fun dispatchEvent(activity: FragmentActivity, eventClass: String, payload: Map<String, Any>) {
         runOnUiThread {
             try {
                 NativeActionCoordinator.dispatchEvent(
@@ -69,7 +75,7 @@ object AdmobFunctions {
     // ---------- Real implementations: banner ----------
 
     class LoadBanner(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
             val slot = parameters["slot"] as? String ?: return notImplemented("LoadBanner: slot missing")
             val unitId = parameters["unit_id"] as? String ?: return notImplemented("LoadBanner: unit_id missing")
 
@@ -111,18 +117,20 @@ object AdmobFunctions {
     }
 
     class ShowBanner(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
             val slot = parameters["slot"] as? String ?: return notImplemented("ShowBanner: slot missing")
             val position = (parameters["position"] as? String) ?: "bottom"
 
-            val adView = BannerRegistry.get(slot)
-                ?: return mapOf(
-                    "success" to false,
-                    "data" to null,
-                    "error" to "ShowBanner: slot '$slot' has no loaded ad. Call load() first."
-                )
-
             runOnUiThread {
+                val adView = BannerRegistry.get(slot) ?: run {
+                    dispatchEvent(
+                        activity,
+                        "AdShowFailed",
+                        mapOf("slot" to slot, "format" to "banner", "error" to "no_loaded_ad"),
+                    )
+                    return@runOnUiThread
+                }
+
                 BannerRegistry.removeContainer(slot)?.let { existing ->
                     (existing.parent as? ViewGroup)?.removeView(existing)
                 }
@@ -157,7 +165,7 @@ object AdmobFunctions {
     }
 
     class HideBanner(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
             val slot = parameters["slot"] as? String ?: return notImplemented("HideBanner: slot missing")
 
             runOnUiThread {
@@ -173,81 +181,81 @@ object AdmobFunctions {
     // ---------- Always-real: platform identifier ----------
 
     class Platform(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> =
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> =
             success(mapOf("platform" to "android"))
     }
 
     // ---------- Stubs: land in later phases ----------
 
     class Start(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.Start")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.Start")
     }
 
     class LoadInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.LoadInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadInterstitial")
     }
 
     class InterstitialReady(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.InterstitialReady")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.InterstitialReady")
     }
 
     class ShowInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.ShowInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.ShowInterstitial")
     }
 
     class LoadRewarded(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.LoadRewarded")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadRewarded")
     }
 
     class RewardedReady(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.RewardedReady")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.RewardedReady")
     }
 
     class ShowRewarded(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.ShowRewarded")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.ShowRewarded")
     }
 
     class LoadRewardedInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.LoadRewardedInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadRewardedInterstitial")
     }
 
     class RewardedInterstitialReady(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.RewardedInterstitialReady")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.RewardedInterstitialReady")
     }
 
     class ShowRewardedInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.ShowRewardedInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.ShowRewardedInterstitial")
     }
 
     class LoadAppOpen(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.LoadAppOpen")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadAppOpen")
     }
 
     class UmpRequestInfo(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.UmpRequestInfo")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpRequestInfo")
     }
 
     class UmpShowForm(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.UmpShowForm")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpShowForm")
     }
 
     class UmpCanRequestAds(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.UmpCanRequestAds")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpCanRequestAds")
     }
 
     class UmpStatus(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.UmpStatus")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpStatus")
     }
 
     class UmpReset(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.UmpReset")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpReset")
     }
 
     class AttRequest(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.AttRequest")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.AttRequest")
     }
 
     class AttStatus(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any?> = notImplemented("Admob.AttStatus")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.AttStatus")
     }
 }

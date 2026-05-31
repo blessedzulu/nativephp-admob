@@ -91,11 +91,11 @@ enum AdmobFunctions {
             }
             let position = (parameters["position"] as? String) ?? "bottom"
 
-            guard let bannerView = BannerRegistry.shared.get(slot: slot) else {
-                return ["success": false, "data": NSNull(), "error": "ShowBanner: slot '\(slot)' has no loaded ad. Call load() first."]
-            }
-
             DispatchQueue.main.async {
+                guard let bannerView = BannerRegistry.shared.get(slot: slot) else {
+                    AdmobFunctions.dispatch("AdShowFailed", ["slot": slot, "format": "banner", "error": "no_loaded_ad"])
+                    return
+                }
                 guard let window = AdmobFunctions.keyWindow() else { return }
 
                 if let existing = BannerRegistry.shared.removeContainer(slot: slot) {
