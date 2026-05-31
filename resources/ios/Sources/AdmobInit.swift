@@ -26,5 +26,7 @@ enum AdmobInit {
                 MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ids
             }
         }
+
+        BannerLifecycle.register()
     }
 }
