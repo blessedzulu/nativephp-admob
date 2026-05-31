@@ -1,0 +1,58 @@
+{
+    "name": "blessedzulu/nativephp-admob",
+    "description": "Google AdMob plugin for NativePHP Mobile - banner, interstitial, rewarded, rewarded interstitial, app-open ads, plus UMP consent and iOS App Tracking Transparency.",
+    "type": "nativephp-plugin",
+    "license": "MIT",
+    "keywords": ["nativephp", "nativephp-plugin", "admob", "google-admob", "ads", "mobile-ads", "laravel"],
+    "homepage": "https://github.com/blessedzulu/nativephp-admob",
+    "support": {
+        "issues": "https://github.com/blessedzulu/nativephp-admob/issues",
+        "source": "https://github.com/blessedzulu/nativephp-admob"
+    },
+    "require": {
+        "php": "^8.3",
+        "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+        "nativephp/mobile": "^3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.1",
+        "pestphp/pest": "^4.7",
+        "pestphp/pest-plugin-laravel": "^4.1",
+        "laravel/pint": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "BlessedZulu\\NativePhpAdmob\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BlessedZulu\\NativePhpAdmob\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BlessedZulu\\NativePhpAdmob\\AdmobServiceProvider"
+            ],
+            "aliases": {
+                "Admob": "BlessedZulu\\NativePhpAdmob\\Facades\\Admob"
+            }
+        },
+        "nativephp": {
+            "manifest": "nativephp.json"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
