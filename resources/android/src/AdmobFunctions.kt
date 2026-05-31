@@ -125,7 +125,7 @@ object AdmobFunctions {
                 val adView = BannerRegistry.get(slot) ?: run {
                     dispatchEvent(
                         activity,
-                        "AdShowFailed",
+                        "AdFailedToShow",
                         mapOf("slot" to slot, "format" to "banner", "error" to "no_loaded_ad"),
                     )
                     return@runOnUiThread

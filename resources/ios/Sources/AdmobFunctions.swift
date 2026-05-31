@@ -93,7 +93,7 @@ enum AdmobFunctions {
 
             DispatchQueue.main.async {
                 guard let bannerView = BannerRegistry.shared.get(slot: slot) else {
-                    AdmobFunctions.dispatch("AdShowFailed", ["slot": slot, "format": "banner", "error": "no_loaded_ad"])
+                    AdmobFunctions.dispatch("AdFailedToShow", ["slot": slot, "format": "banner", "error": "no_loaded_ad"])
                     return
                 }
                 guard let window = AdmobFunctions.keyWindow() else { return }
