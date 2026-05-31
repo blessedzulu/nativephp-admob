@@ -221,27 +221,153 @@ enum AdmobFunctions {
     }
 
     class LoadRewarded: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.LoadRewarded") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("LoadRewarded: slot missing")
+            }
+            guard let unitId = parameters["unit_id"] as? String else {
+                return AdmobFunctions.notImplemented("LoadRewarded: unit_id missing")
+            }
+
+            RewardedAd.load(with: unitId, request: Request()) { ad, error in
+                if let error = error {
+                    RewardedRegistry.shared.remove(slot: slot)
+                    let nsError = error as NSError
+                    AdmobFunctions.dispatch("AdFailedToLoad", [
+                        "slot": slot,
+                        "format": "rewarded",
+                        "errorCode": nsError.code,
+                        "errorMessage": error.localizedDescription,
+                    ])
+                    return
+                }
+                guard let ad = ad else { return }
+                let delegate = RewardedDelegate(slot: slot)
+                ad.fullScreenContentDelegate = delegate
+                RewardedRegistry.shared.put(slot: slot, ad: ad, delegate: delegate)
+                AdmobFunctions.dispatch("AdLoaded", ["slot": slot, "format": "rewarded"])
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class RewardedReady: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.RewardedReady") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("RewardedReady: slot missing")
+            }
+            return AdmobFunctions.success(["ready": RewardedRegistry.shared.get(slot: slot) != nil])
+        }
     }
 
     class ShowRewarded: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.ShowRewarded") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("ShowRewarded: slot missing")
+            }
+
+            DispatchQueue.main.async {
+                guard let ad = RewardedRegistry.shared.get(slot: slot) else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "rewarded", "error": "no_loaded_ad",
+                    ])
+                    return
+                }
+                guard let root = AdmobFunctions.rootViewController() else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "rewarded", "error": "no_root_view_controller",
+                    ])
+                    return
+                }
+                ad.present(from: root) {
+                    let reward = ad.adReward
+                    AdmobFunctions.dispatch("UserEarnedReward", [
+                        "slot": slot,
+                        "format": "rewarded",
+                        "type": reward.type,
+                        "amount": Int(truncating: reward.amount),
+                    ])
+                }
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class LoadRewardedInterstitial: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.LoadRewardedInterstitial") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("LoadRewardedInterstitial: slot missing")
+            }
+            guard let unitId = parameters["unit_id"] as? String else {
+                return AdmobFunctions.notImplemented("LoadRewardedInterstitial: unit_id missing")
+            }
+
+            RewardedInterstitialAd.load(with: unitId, request: Request()) { ad, error in
+                if let error = error {
+                    RewardedInterstitialRegistry.shared.remove(slot: slot)
+                    let nsError = error as NSError
+                    AdmobFunctions.dispatch("AdFailedToLoad", [
+                        "slot": slot,
+                        "format": "rewarded_interstitial",
+                        "errorCode": nsError.code,
+                        "errorMessage": error.localizedDescription,
+                    ])
+                    return
+                }
+                guard let ad = ad else { return }
+                let delegate = RewardedInterstitialDelegate(slot: slot)
+                ad.fullScreenContentDelegate = delegate
+                RewardedInterstitialRegistry.shared.put(slot: slot, ad: ad, delegate: delegate)
+                AdmobFunctions.dispatch("AdLoaded", ["slot": slot, "format": "rewarded_interstitial"])
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class RewardedInterstitialReady: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.RewardedInterstitialReady") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("RewardedInterstitialReady: slot missing")
+            }
+            return AdmobFunctions.success(["ready": RewardedInterstitialRegistry.shared.get(slot: slot) != nil])
+        }
     }
 
     class ShowRewardedInterstitial: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.ShowRewardedInterstitial") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("ShowRewardedInterstitial: slot missing")
+            }
+
+            DispatchQueue.main.async {
+                guard let ad = RewardedInterstitialRegistry.shared.get(slot: slot) else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "rewarded_interstitial", "error": "no_loaded_ad",
+                    ])
+                    return
+                }
+                guard let root = AdmobFunctions.rootViewController() else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "rewarded_interstitial", "error": "no_root_view_controller",
+                    ])
+                    return
+                }
+                ad.present(from: root) {
+                    let reward = ad.adReward
+                    AdmobFunctions.dispatch("UserEarnedReward", [
+                        "slot": slot,
+                        "format": "rewarded_interstitial",
+                        "type": reward.type,
+                        "amount": Int(truncating: reward.amount),
+                    ])
+                }
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class LoadAppOpen: BridgeFunction {
