@@ -4,6 +4,26 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.0-alpha] - 2026-05-31
+
+### Added
+
+- AdMob SDK declarations in `nativephp.json`:
+  - Android: `com.google.android.gms:play-services-ads:25.3.0` and `com.google.android.ump:user-messaging-platform:4.0.0` Gradle deps.
+  - iOS: `Google-Mobile-Ads-SDK ~> 13.4` and `GoogleUserMessagingPlatform ~> 2.7` CocoaPods.
+- `ADMOB_APP_ID` declared as a required secret. The plugin writes it into `AndroidManifest.xml` (`<meta-data>` `com.google.android.gms.ads.APPLICATION_ID`) and `Info.plist` (`GADApplicationIdentifier`) automatically.
+- 50 SKAdNetwork identifiers shipped in `Info.plist` `SKAdNetworkItems` as the iOS attribution starter set.
+- `NSUserTrackingUsageDescription` shipped with a sensible default copy.
+- Native init functions on both platforms (`AdmobInit.initialize`) that boot the Google Mobile Ads SDK at app start via NativePHP's `init_function` mechanism. Honours the `ADMOB_TEST_DEVICES` env var to register test device IDs.
+- Stub Kotlin and Swift bridge function classes for every entry in the manifest's `bridge_functions`. Each returns a "not implemented in v0.3.x" error except `Admob.Platform`, which returns the real platform identifier.
+- README configuration section documenting `ADMOB_APP_ID`, the SKAdNetwork refresh policy, and platform-specific manifest behaviour.
+
+### Notes
+
+- `native:plugin:validate` now passes against the manifest in a consumer app.
+- A NativePHP build that registers the plugin will compile, link, and start on a real device with the AdMob SDK initialised at app boot.
+- Calling any builder method outside `Admob::fake()` will dispatch an `AdFailedToLoad` / `AdFailedToShow` Laravel event with a "not implemented" message until Phase 3.
+
 ## [0.2.0-alpha] - 2026-05-31
 
 ### Added

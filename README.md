@@ -34,17 +34,34 @@ php artisan native:run                                          # rebuild
 
 ## Configuration
 
-Set the AdMob app ID and any slot IDs in `.env`:
+### Required: AdMob app ID
+
+The plugin's manifest declares `ADMOB_APP_ID` as a required secret. Set it in your `.env` before running `native:run` or the build will fail with a clear error:
 
 ```dotenv
 ADMOB_ENABLED=true
 ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+```
 
+The plugin's manifest takes care of writing this into the right places on each platform:
+
+- **Android**: injected into `AndroidManifest.xml` as the `com.google.android.gms.ads.APPLICATION_ID` `<meta-data>` entry.
+- **iOS**: injected into `Info.plist` as `GADApplicationIdentifier`.
+
+You do not need to edit either of those files yourself.
+
+### Slot IDs
+
+```dotenv
 # Per-slot ad unit IDs (one env var per slot you register)
 ADMOB_BANNER_CALCULATOR_BOTTOM=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
 ADMOB_INTERSTITIAL_BETWEEN_CALCULATIONS=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
 ADMOB_REWARDED_EXPORT_PDF=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
 ```
+
+### SKAdNetwork list (iOS)
+
+The plugin ships a starter list of SKAdNetwork identifiers in its iOS Info.plist contribution. Google publishes the canonical list at [developers.google.com/admob/ios/privacy/strategies](https://developers.google.com/admob/ios/privacy/strategies) and updates it from time to time. Check that page before each App Store submission and add any new entries to your consumer app's Info.plist - your additions are merged with the plugin's defaults.
 
 To register slots, publish the config and add named entries:
 
