@@ -30,5 +30,7 @@ object AdmobInit {
                         .build()
                 )
             }
+
+        BannerLifecycle.register()
     }
 }
