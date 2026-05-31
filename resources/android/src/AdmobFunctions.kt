@@ -408,15 +408,112 @@ object AdmobFunctions {
     }
 
     class LoadRewardedInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadRewardedInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("LoadRewardedInterstitial: slot missing")
+            val unitId = parameters["unit_id"] as? String ?: return notImplemented("LoadRewardedInterstitial: unit_id missing")
+
+            runOnUiThread {
+                RewardedInterstitialAd.load(
+                    activity,
+                    unitId,
+                    AdRequest.Builder().build(),
+                    object : RewardedInterstitialAdLoadCallback() {
+                        override fun onAdLoaded(ad: RewardedInterstitialAd) {
+                            RewardedInterstitialRegistry.put(slot, ad)
+                            dispatchEvent(activity, "AdLoaded", mapOf("slot" to slot, "format" to "rewarded_interstitial"))
+                        }
+
+                        override fun onAdFailedToLoad(error: LoadAdError) {
+                            RewardedInterstitialRegistry.remove(slot)
+                            dispatchEvent(
+                                activity,
+                                "AdFailedToLoad",
+                                mapOf(
+                                    "slot" to slot,
+                                    "format" to "rewarded_interstitial",
+                                    "errorCode" to error.code,
+                                    "errorMessage" to error.message,
+                                ),
+                            )
+                        }
+                    },
+                )
+            }
+
+            return success()
+        }
     }
 
     class RewardedInterstitialReady(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.RewardedInterstitialReady")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("RewardedInterstitialReady: slot missing")
+            return success(mapOf("ready" to (RewardedInterstitialRegistry.get(slot) != null)))
+        }
     }
 
     class ShowRewardedInterstitial(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.ShowRewardedInterstitial")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("ShowRewardedInterstitial: slot missing")
+
+            runOnUiThread {
+                val ad = RewardedInterstitialRegistry.get(slot) ?: run {
+                    dispatchEvent(
+                        activity,
+                        "AdFailedToShow",
+                        mapOf("slot" to slot, "format" to "rewarded_interstitial", "error" to "no_loaded_ad"),
+                    )
+                    return@runOnUiThread
+                }
+
+                ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdShowedFullScreenContent() {
+                        dispatchEvent(activity, "AdShown", mapOf("slot" to slot, "format" to "rewarded_interstitial"))
+                    }
+
+                    override fun onAdDismissedFullScreenContent() {
+                        RewardedInterstitialRegistry.remove(slot)
+                        dispatchEvent(activity, "AdDismissed", mapOf("slot" to slot, "format" to "rewarded_interstitial"))
+                    }
+
+                    override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        RewardedInterstitialRegistry.remove(slot)
+                        dispatchEvent(
+                            activity,
+                            "AdFailedToShow",
+                            mapOf(
+                                "slot" to slot,
+                                "format" to "rewarded_interstitial",
+                                "errorCode" to error.code,
+                                "errorMessage" to error.message,
+                            ),
+                        )
+                    }
+
+                    override fun onAdImpression() {
+                        dispatchEvent(activity, "AdImpression", mapOf("slot" to slot, "format" to "rewarded_interstitial"))
+                    }
+
+                    override fun onAdClicked() {
+                        dispatchEvent(activity, "AdClicked", mapOf("slot" to slot, "format" to "rewarded_interstitial"))
+                    }
+                }
+
+                ad.show(activity, OnUserEarnedRewardListener { rewardItem ->
+                    dispatchEvent(
+                        activity,
+                        "UserEarnedReward",
+                        mapOf(
+                            "slot" to slot,
+                            "format" to "rewarded_interstitial",
+                            "type" to rewardItem.type,
+                            "amount" to rewardItem.amount,
+                        ),
+                    )
+                })
+            }
+
+            return success()
+        }
     }
 
     class LoadAppOpen(private val activity: FragmentActivity) : BridgeFunction {
