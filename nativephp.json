@@ -1,7 +1,131 @@
 {
     "namespace": "Admob",
-    "bridge_functions": [],
-    "events": [],
+    "bridge_functions": [
+        {
+            "name": "Admob.Start",
+            "ios": "AdmobFunctions.Start",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.Start"
+        },
+        {
+            "name": "Admob.Platform",
+            "ios": "AdmobFunctions.Platform",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.Platform"
+        },
+        {
+            "name": "Admob.LoadBanner",
+            "ios": "AdmobFunctions.LoadBanner",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.LoadBanner"
+        },
+        {
+            "name": "Admob.ShowBanner",
+            "ios": "AdmobFunctions.ShowBanner",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.ShowBanner"
+        },
+        {
+            "name": "Admob.HideBanner",
+            "ios": "AdmobFunctions.HideBanner",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.HideBanner"
+        },
+        {
+            "name": "Admob.LoadInterstitial",
+            "ios": "AdmobFunctions.LoadInterstitial",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.LoadInterstitial"
+        },
+        {
+            "name": "Admob.InterstitialReady",
+            "ios": "AdmobFunctions.InterstitialReady",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.InterstitialReady"
+        },
+        {
+            "name": "Admob.ShowInterstitial",
+            "ios": "AdmobFunctions.ShowInterstitial",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.ShowInterstitial"
+        },
+        {
+            "name": "Admob.LoadRewarded",
+            "ios": "AdmobFunctions.LoadRewarded",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.LoadRewarded"
+        },
+        {
+            "name": "Admob.RewardedReady",
+            "ios": "AdmobFunctions.RewardedReady",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.RewardedReady"
+        },
+        {
+            "name": "Admob.ShowRewarded",
+            "ios": "AdmobFunctions.ShowRewarded",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.ShowRewarded"
+        },
+        {
+            "name": "Admob.LoadRewardedInterstitial",
+            "ios": "AdmobFunctions.LoadRewardedInterstitial",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.LoadRewardedInterstitial"
+        },
+        {
+            "name": "Admob.RewardedInterstitialReady",
+            "ios": "AdmobFunctions.RewardedInterstitialReady",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.RewardedInterstitialReady"
+        },
+        {
+            "name": "Admob.ShowRewardedInterstitial",
+            "ios": "AdmobFunctions.ShowRewardedInterstitial",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.ShowRewardedInterstitial"
+        },
+        {
+            "name": "Admob.LoadAppOpen",
+            "ios": "AdmobFunctions.LoadAppOpen",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.LoadAppOpen"
+        },
+        {
+            "name": "Admob.UmpRequestInfo",
+            "ios": "AdmobFunctions.UmpRequestInfo",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpRequestInfo"
+        },
+        {
+            "name": "Admob.UmpShowForm",
+            "ios": "AdmobFunctions.UmpShowForm",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpShowForm"
+        },
+        {
+            "name": "Admob.UmpCanRequestAds",
+            "ios": "AdmobFunctions.UmpCanRequestAds",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpCanRequestAds"
+        },
+        {
+            "name": "Admob.UmpStatus",
+            "ios": "AdmobFunctions.UmpStatus",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpStatus"
+        },
+        {
+            "name": "Admob.UmpReset",
+            "ios": "AdmobFunctions.UmpReset",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpReset"
+        },
+        {
+            "name": "Admob.AttRequest",
+            "ios": "AdmobFunctions.AttRequest",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.AttRequest"
+        },
+        {
+            "name": "Admob.AttStatus",
+            "ios": "AdmobFunctions.AttStatus",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.AttStatus"
+        }
+    ],
+    "events": [
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdLoaded",
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdFailedToLoad",
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdShown",
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdDismissed",
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdFailedToShow",
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdImpression",
+        "BlessedZulu\\NativePhpAdmob\\Events\\AdClicked",
+        "BlessedZulu\\NativePhpAdmob\\Events\\UserEarnedReward",
+        "BlessedZulu\\NativePhpAdmob\\Events\\ConsentFormShown",
+        "BlessedZulu\\NativePhpAdmob\\Events\\ConsentChanged",
+        "BlessedZulu\\NativePhpAdmob\\Events\\TrackingAuthorizationGranted",
+        "BlessedZulu\\NativePhpAdmob\\Events\\TrackingAuthorizationDenied"
+    ],
     "android": {
         "permissions": [
             "android.permission.INTERNET",
