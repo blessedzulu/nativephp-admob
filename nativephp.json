@@ -1,0 +1,25 @@
+{
+    "namespace": "Admob",
+    "bridge_functions": [],
+    "events": [],
+    "android": {
+        "permissions": [
+            "android.permission.INTERNET",
+            "android.permission.ACCESS_NETWORK_STATE"
+        ],
+        "dependencies": {
+            "implementation": []
+        },
+        "meta_data": [],
+        "activities": [],
+        "min_version": 26
+    },
+    "ios": {
+        "info_plist": {},
+        "dependencies": {
+            "pods": []
+        },
+        "min_version": "18.0"
+    },
+    "secrets": {}
+}
