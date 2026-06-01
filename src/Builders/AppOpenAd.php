@@ -6,12 +6,16 @@ namespace BlessedZulu\NativePhpAdmob\Builders;
 
 use BlessedZulu\NativePhpAdmob\Admob;
 use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
+use Illuminate\Support\Facades\Log;
 
 /**
- * App-open ads have no explicit show() method. The native side observes the
- * app's lifecycle and shows the cached ad when the app returns to the
- * foreground. PHP's responsibility is just to load() and let the native
- * lifecycle observer handle the rest.
+ * App-open ads. The recommended path is to call load() on app start and let
+ * the native lifecycle observer (AppOpenLifecycle) auto-show the cached ad
+ * on app foreground (after the first resume, with a 4-hour staleness check).
+ *
+ * isReady() and show() are exposed for manual override when the consumer
+ * wants explicit control over timing (e.g. on a specific in-app event rather
+ * than on every foreground).
  */
 class AppOpenAd
 {
@@ -26,12 +30,40 @@ class AppOpenAd
 
     public function load(): self
     {
-        $this->bridge->call('Admob.LoadAppOpen', [
+        $this->bridge->call('Admob.LoadAppOpen', $this->params());
+
+        return $this;
+    }
+
+    public function isReady(): bool
+    {
+        $response = $this->bridge->call('Admob.AppOpenReady', $this->params());
+
+        return (bool) ($response['data']['ready'] ?? false);
+    }
+
+    public function show(): self
+    {
+        if (! $this->manager->canRequestAds()) {
+            Log::info('Admob: app open show() skipped, consent not granted.', ['slot' => $this->slot]);
+
+            return $this;
+        }
+
+        $this->bridge->call('Admob.ShowAppOpen', $this->params());
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function params(): array
+    {
+        return [
             'slot' => $this->slot,
             'format' => self::FORMAT,
             'unit_id' => $this->adUnitId,
-        ]);
-
-        return $this;
+        ];
     }
 }
