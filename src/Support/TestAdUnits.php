@@ -26,7 +26,11 @@ class TestAdUnits
 
     public const REWARDED_INTERSTITIAL = 'ca-app-pub-3940256099942544/5354046379';
 
-    public const APP_OPEN = 'ca-app-pub-3940256099942544/3419835294';
+    // App Open test IDs ARE platform-specific (unlike the other formats).
+    // Android: 9257395921. iOS: 5662855259. Using the Android ID here; the
+    // iOS divergence is a known wart - to be addressed in Phase 9 polish
+    // when TestAdUnits gains platform awareness.
+    public const APP_OPEN = 'ca-app-pub-3940256099942544/9257395921';
 
     public static function for(string $format): string
     {
