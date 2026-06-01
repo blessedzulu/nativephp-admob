@@ -4,6 +4,21 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.7.0-alpha] - 2026-06-01
+
+### Added
+
+- **Real App Open ad implementation on Android.** `Admob::appOpen('slot')->load()` pre-loads. From there the native lifecycle observer (`AppOpenLifecycle`) automatically presents the cached ad on every app foreground after the first resume (cold-start skip). Honours Google's recommended 4-hour staleness check via `AppOpenRegistry.isFresh()`.
+- **Real App Open ad implementation on iOS.** Same architecture - `AppOpenLifecycle` subscribes to `UIApplication.didBecomeActiveNotification`. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
+- **`AppOpenAd::isReady()` and `AppOpenAd::show()`** added to the PHP builder for manual override when the auto-show flow doesn't fit. The recommended path is still auto-show via `load()`.
+- `AppOpenRegistry` (Android + iOS) - slot-keyed map plus load-timestamp tracking. `isFresh(slot)` enforces the 4h threshold.
+- `AppOpenLifecycle` (Android + iOS) - registers a resume/foreground observer once at app boot from `AdmobInit`. Skips the first resume; on subsequent resumes, shows the cached ad if fresh, discards if stale.
+- 2 new bridge function declarations in `nativephp.json`: `Admob.AppOpenReady` and `Admob.ShowAppOpen`. The original v0.3 manifest only declared `Admob.LoadAppOpen` because that was all the PHP builder used at the time.
+
+### Known limitations
+
+- Stale ads are silently discarded; the plugin does NOT auto-load a replacement. Consumers should wire `#[OnNative(AdDismissed::class)]` to call `load()` again, or periodic-load if their app rarely backgrounds. A built-in auto-refresh helper is planned for Phase 9 polish.
+
 ## [0.6.0-alpha] - 2026-05-31
 
 ### Added

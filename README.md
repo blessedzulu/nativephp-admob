@@ -218,9 +218,56 @@ if (Admob::rewardedInterstitial('between_levels')->isReady()) {
 
 `UserEarnedReward` event payload includes `format: 'rewarded_interstitial'` so a single listener can branch.
 
+### App Open ads (available since v0.7.0-alpha — Android device-tested, iOS untested on hardware)
+
+App Open ads are the format Google designed for the brief moment between app foreground and your splash/home screen. The plugin's recommended path is **auto-show**: call `load()` once on app start; the native lifecycle observer presents the cached ad on every subsequent foreground (skipping the cold-start resume), and discards anything older than 4 hours.
+
+```php
+use BlessedZulu\NativePhpAdmob\Facades\Admob;
+use BlessedZulu\NativePhpAdmob\Events\AdDismissed;
+use Native\Mobile\Attributes\OnNative;
+
+// Once, on app boot or in a long-lived component:
+public function mount(): void
+{
+    Admob::appOpen('warm_resume')->load();
+}
+
+// Re-load after dismissal so the next foreground has a fresh ad:
+#[OnNative(AdDismissed::class)]
+public function onDismissed(string $slot, string $format): void
+{
+    if ($format === 'app_open') {
+        Admob::appOpen($slot)->load();
+    }
+}
+```
+
+**Locked behaviours:**
+- **Skip first resume.** The very first `onResume` / `didBecomeActive` after launch is consumed silently so the splash owns cold start.
+- **4-hour staleness.** Ads older than 4h are silently discarded on foreground. The plugin does NOT auto-load a replacement (consumer drives that via `#[OnNative(AdDismissed::class)]` or a periodic re-load).
+- **One-shot per show.** Same as interstitial/rewarded: dismissal clears the registry slot; call `load()` again before the next show.
+
+**Manual override** when the auto-show flow doesn't fit (e.g. you want to gate on a feature-flag or an in-app purchase state):
+
+```php
+Admob::appOpen('paywall_dismissed')->load();
+
+// Later:
+if (Admob::appOpen('paywall_dismissed')->isReady()) {
+    Admob::appOpen('paywall_dismissed')->show();
+}
+```
+
+Configure the slot:
+
+```dotenv
+ADMOB_APP_OPEN_WARM_RESUME=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+```
+
 ### Other formats
 
-> _App Open — filled in Phase 6._
+> _All five formats now ship - Banner / Interstitial / Rewarded / Rewarded Interstitial / App Open._
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
