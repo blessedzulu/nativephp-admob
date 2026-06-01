@@ -33,6 +33,12 @@ it('carries a status string on ConsentChanged', function () {
     expect($event->status)->toBe('obtained');
 });
 
+it('carries a status string on ConsentFormDismissed', function () {
+    $event = new Events\ConsentFormDismissed(Events\ConsentChanged::STATUS_OBTAINED);
+
+    expect($event->status)->toBe('obtained');
+});
+
 it('instantiates parameterless events', function () {
     expect(new Events\ConsentFormShown)->toBeInstanceOf(Events\ConsentFormShown::class)
         ->and(new Events\TrackingAuthorizationGranted)->toBeInstanceOf(Events\TrackingAuthorizationGranted::class)

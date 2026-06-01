@@ -4,6 +4,29 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.8.0-alpha] - 2026-06-01
+
+Ships the two compliance surfaces (Phases 7 + 8): real UMP consent and real iOS App Tracking Transparency. With this release every previously-stubbed bridge function is real - only iOS device verification remains outstanding.
+
+### Added — UMP consent
+
+- **Real UMP (User Messaging Platform) consent implementation on Android.** The five `Admob::ump()` methods are now backed by Google's UMP SDK: `requestConsentInfo()` runs `requestConsentInfoUpdate`, `showFormIfRequired()` runs `loadAndShowConsentFormIfRequired`, and `canRequestAds()` / `status()` / `reset()` read and reset live consent state. This removes the need for the `Admob::setCanRequestAds(true)` test bypass - the real consent flow now drives the `show()`-time gate.
+- **Real UMP implementation on iOS** using `GoogleUserMessagingPlatform`. Same surface. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
+- `ConsentManager` (Android + iOS) - owns the process-wide `ConsentInformation` singleton, builds `ConsentDebugSettings` from `ADMOB_UMP_DEBUG_GEOGRAPHY` (`EEA` / `NOT_EEA` / `DISABLED`) + `ADMOB_TEST_DEVICES` (UMP hashed device IDs), and maps the SDK consent-status enum to the PHP `ConsentChanged::STATUS_*` strings.
+- **New `ConsentFormDismissed` event** (carries the resolved `status`), fired when the consent form closes / is not required / errors. Registered in `nativephp.json`.
+- `ConsentChanged` is now dispatched after every info-update and after every form dismissal, so the PHP-side consent cache stays accurate even in the common non-EEA "no form required" path.
+- `ConsentFormShown` is dispatched only when a form is actually required (status `REQUIRED`), not on every `showFormIfRequired()` call.
+- New `consent.ump_debug_geography` config key for discoverability (the native layer reads the env var directly).
+
+### Added — iOS ATT
+
+- **Real iOS App Tracking Transparency (ATT) implementation.** `Admob::att()->requestAuthorization()` now presents Apple's tracking prompt via `ATTrackingManager.requestTrackingAuthorization`, dispatching `TrackingAuthorizationGranted` or `TrackingAuthorizationDenied` on completion. `Admob::att()->status()` maps `ATTrackingManager.trackingAuthorizationStatus` to `authorized` / `denied` / `restricted` / `notDetermined`. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
+- Android `AttRequest` / `AttStatus` are safe no-ops (the PHP `Att` layer already short-circuits to `unsupported` on non-iOS via the `Platform` bridge check, so these are never invoked there). `NSUserTrackingUsageDescription` is already declared in the manifest's `info_plist`; `AppTrackingTransparency` is a system framework, auto-linked on import - no CocoaPods entry needed.
+
+### Changed
+
+- **Consent-skip log level raised from `info` to `warning`** in every builder's `show()`. A silently-gated ad (consent not yet granted) is now visible at default production log levels, making the most common "ads never appear" misconfiguration diagnosable.
+
 ## [0.7.1-alpha] - 2026-06-01
 
 ### Fixed

@@ -331,6 +331,7 @@ class ExportPdf extends Component
 | `AdClicked` | `slot`, `format` |
 | `UserEarnedReward` | `slot`, `type`, `amount` |
 | `ConsentFormShown` | - |
+| `ConsentFormDismissed` | `status` |
 | `ConsentChanged` | `status` |
 | `TrackingAuthorizationGranted` | - |
 | `TrackingAuthorizationDenied` | - |
@@ -352,6 +353,17 @@ UMP (consent) and ATT (iOS tracking) are enabled by default. If your audience is
 ADMOB_UMP_ENABLED=false
 ADMOB_ATT_ENABLED=false
 ```
+
+### Testing the consent form
+
+The UMP consent form only appears for users in the EEA + UK. To force it during development on a device anywhere, set a debug geography and register your device as a UMP test device:
+
+```dotenv
+ADMOB_UMP_DEBUG_GEOGRAPHY=EEA
+ADMOB_TEST_DEVICES=<UMP-hashed-device-id>
+```
+
+The UMP-hashed device ID is printed to logcat / the Xcode console on the first `requestConsentInfo()` call on an unconfigured device (it is **not** the same value as the Mobile Ads test-device ID). Copy it from the log into `ADMOB_TEST_DEVICES` and relaunch. Set `ADMOB_UMP_DEBUG_GEOGRAPHY=DISABLED` (the default) for production.
 
 You are responsible for following Google's [AdMob policies](https://support.google.com/admob/answer/6128543) and Apple's [App Tracking Transparency requirements](https://developer.apple.com/app-store/user-privacy-and-data-use/).
 

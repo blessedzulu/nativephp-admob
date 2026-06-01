@@ -6,6 +6,7 @@ use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use BlessedZulu\NativePhpAdmob\Events\ConsentChanged;
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
 use BlessedZulu\NativePhpAdmob\Support\FakeBridge;
+use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     config([
@@ -50,11 +51,13 @@ it('responds to a simulated ConsentChanged event by updating canRequestAds', fun
     expect(Admob::canRequestAds())->toBeTrue();
 });
 
-it('logs and no-ops when show() is called without consent', function () {
+it('logs a warning and no-ops when show() is called without consent', function () {
     $fake = Admob::fake();
     app('admob')->setCanRequestAds(false);
+    Log::spy();
 
     Admob::banner('footer')->show();
 
     $fake->assertNotCalled('Admob.ShowBanner');
+    Log::shouldHaveReceived('warning')->once();
 });

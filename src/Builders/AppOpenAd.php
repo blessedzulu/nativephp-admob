@@ -45,7 +45,7 @@ class AppOpenAd
     public function show(): self
     {
         if (! $this->manager->canRequestAds()) {
-            Log::info('Admob: app open show() skipped, consent not granted.', ['slot' => $this->slot]);
+            Log::warning('Admob: app open show() skipped, consent not granted.', ['slot' => $this->slot]);
 
             return $this;
         }

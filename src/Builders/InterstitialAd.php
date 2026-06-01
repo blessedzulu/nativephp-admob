@@ -36,7 +36,7 @@ class InterstitialAd
     public function show(): self
     {
         if (! $this->manager->canRequestAds()) {
-            Log::info('Admob: interstitial show() skipped, consent not granted.', ['slot' => $this->slot]);
+            Log::warning('Admob: interstitial show() skipped, consent not granted.', ['slot' => $this->slot]);
 
             return $this;
         }

@@ -29,7 +29,7 @@ class BannerAd
     public function show(string $position = 'bottom'): self
     {
         if (! $this->manager->canRequestAds()) {
-            Log::info('Admob: banner show() skipped, consent not granted.', ['slot' => $this->slot]);
+            Log::warning('Admob: banner show() skipped, consent not granted.', ['slot' => $this->slot]);
 
             return $this;
         }
