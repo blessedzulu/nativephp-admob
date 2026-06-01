@@ -1,6 +1,8 @@
+import AppTrackingTransparency
 import Foundation
-import UIKit
 import GoogleMobileAds
+import UIKit
+import UserMessagingPlatform
 
 /**
  * AdMob bridge function implementations.
@@ -450,32 +452,93 @@ enum AdmobFunctions {
         }
     }
 
+    // ---------- Real implementations: UMP consent ----------
+
     class UmpRequestInfo: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.UmpRequestInfo") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            ConsentManager.info.requestConsentInfoUpdate(with: ConsentManager.requestParameters()) { error in
+                if let error = error {
+                    NSLog("UMP requestConsentInfoUpdate error: \(error.localizedDescription)")
+                }
+                AdmobFunctions.dispatch("ConsentChanged", ["status": ConsentManager.statusString()])
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class UmpShowForm: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.UmpShowForm") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            DispatchQueue.main.async {
+                guard let root = AdmobFunctions.rootViewController() else {
+                    AdmobFunctions.dispatch("ConsentChanged", ["status": ConsentManager.statusString()])
+                    return
+                }
+                if ConsentManager.isFormRequired() {
+                    AdmobFunctions.dispatch("ConsentFormShown", [:])
+                }
+                ConsentForm.loadAndPresentIfRequired(from: root) { error in
+                    if let error = error {
+                        NSLog("UMP loadAndPresentIfRequired error: \(error.localizedDescription)")
+                    }
+                    let status = ConsentManager.statusString()
+                    AdmobFunctions.dispatch("ConsentFormDismissed", ["status": status])
+                    AdmobFunctions.dispatch("ConsentChanged", ["status": status])
+                }
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class UmpCanRequestAds: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.UmpCanRequestAds") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            return AdmobFunctions.success(["can_request": ConsentManager.info.canRequestAds])
+        }
     }
 
     class UmpStatus: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.UmpStatus") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            return AdmobFunctions.success(["status": ConsentManager.statusString()])
+        }
     }
 
     class UmpReset: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.UmpReset") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            ConsentManager.info.reset()
+
+            return AdmobFunctions.success()
+        }
     }
 
+    // ---------- Real implementations: ATT (App Tracking Transparency) ----------
+
     class AttRequest: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.AttRequest") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            ATTrackingManager.requestTrackingAuthorization { status in
+                let event = status == .authorized
+                    ? "TrackingAuthorizationGranted"
+                    : "TrackingAuthorizationDenied"
+                AdmobFunctions.dispatch(event, [:])
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class AttStatus: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.AttStatus") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            let status: String
+            switch ATTrackingManager.trackingAuthorizationStatus {
+            case .authorized: status = "authorized"
+            case .denied: status = "denied"
+            case .restricted: status = "restricted"
+            case .notDetermined: status = "notDetermined"
+            @unknown default: status = "notDetermined"
+            }
+
+            return AdmobFunctions.success(["status": status])
+        }
     }
 }
 

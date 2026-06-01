@@ -22,6 +22,7 @@ import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
+import com.google.android.ump.UserMessagingPlatform
 import com.nativephp.mobile.bridge.BridgeFunction
 import com.nativephp.mobile.utils.NativeActionCoordinator
 import org.json.JSONObject
@@ -602,31 +603,77 @@ object AdmobFunctions {
         }
     }
 
+    // ---------- Real implementations: UMP consent ----------
+
     class UmpRequestInfo(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpRequestInfo")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val info = ConsentManager.info(activity)
+            runOnUiThread {
+                info.requestConsentInfoUpdate(
+                    activity,
+                    ConsentManager.requestParameters(activity),
+                    {
+                        dispatchEvent(activity, "ConsentChanged", mapOf("status" to ConsentManager.statusString(info)))
+                    },
+                    { error ->
+                        Log.w(TAG, "UMP requestConsentInfoUpdate failed: ${error.message}")
+                        // Fail closed: surface whatever status the SDK holds so PHP's cache stays correct.
+                        dispatchEvent(activity, "ConsentChanged", mapOf("status" to ConsentManager.statusString(info)))
+                    },
+                )
+            }
+
+            return success()
+        }
     }
 
     class UmpShowForm(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpShowForm")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val info = ConsentManager.info(activity)
+            runOnUiThread {
+                if (ConsentManager.isFormRequired(info)) {
+                    dispatchEvent(activity, "ConsentFormShown", emptyMap())
+                }
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { formError ->
+                    if (formError != null) {
+                        Log.w(TAG, "UMP loadAndShowConsentFormIfRequired error: ${formError.message}")
+                    }
+                    val status = ConsentManager.statusString(info)
+                    dispatchEvent(activity, "ConsentFormDismissed", mapOf("status" to status))
+                    dispatchEvent(activity, "ConsentChanged", mapOf("status" to status))
+                }
+            }
+
+            return success()
+        }
     }
 
     class UmpCanRequestAds(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpCanRequestAds")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> =
+            success(mapOf("can_request" to ConsentManager.info(activity).canRequestAds()))
     }
 
     class UmpStatus(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpStatus")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> =
+            success(mapOf("status" to ConsentManager.statusString(ConsentManager.info(activity))))
     }
 
     class UmpReset(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.UmpReset")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            ConsentManager.info(activity).reset()
+
+            return success()
+        }
     }
 
+    // ---------- ATT: iOS-only. Android short-circuits in PHP (Att::isSupported),
+    // so these are never invoked here - kept as safe no-ops for completeness. ----------
+
     class AttRequest(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.AttRequest")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = success()
     }
 
     class AttStatus(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.AttStatus")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> = success(mapOf("status" to "unsupported"))
     }
 }

@@ -31,6 +31,12 @@ return [
         // if you collect IDFA. Set false if you only serve non-personalised
         // ads on iOS.
         'att_enabled' => env('ADMOB_ATT_ENABLED', true),
+
+        // UMP debug geography for testing the consent form outside the EEA.
+        // One of EEA, NOT_EEA, DISABLED. The native layer reads
+        // ADMOB_UMP_DEBUG_GEOGRAPHY directly from the process env (like
+        // ADMOB_TEST_DEVICES); this key exists for discoverability and parity.
+        'ump_debug_geography' => env('ADMOB_UMP_DEBUG_GEOGRAPHY', 'DISABLED'),
     ],
 
     // Named slots resolved by Admob::banner('slot'), ::interstitial('slot'),

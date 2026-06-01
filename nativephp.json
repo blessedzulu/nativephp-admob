@@ -132,6 +132,7 @@
         "BlessedZulu\\NativePhpAdmob\\Events\\AdClicked",
         "BlessedZulu\\NativePhpAdmob\\Events\\UserEarnedReward",
         "BlessedZulu\\NativePhpAdmob\\Events\\ConsentFormShown",
+        "BlessedZulu\\NativePhpAdmob\\Events\\ConsentFormDismissed",
         "BlessedZulu\\NativePhpAdmob\\Events\\ConsentChanged",
         "BlessedZulu\\NativePhpAdmob\\Events\\TrackingAuthorizationGranted",
         "BlessedZulu\\NativePhpAdmob\\Events\\TrackingAuthorizationDenied"
