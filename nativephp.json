@@ -77,6 +77,16 @@
             "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.LoadAppOpen"
         },
         {
+            "name": "Admob.AppOpenReady",
+            "ios": "AdmobFunctions.AppOpenReady",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.AppOpenReady"
+        },
+        {
+            "name": "Admob.ShowAppOpen",
+            "ios": "AdmobFunctions.ShowAppOpen",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.ShowAppOpen"
+        },
+        {
             "name": "Admob.UmpRequestInfo",
             "ios": "AdmobFunctions.UmpRequestInfo",
             "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpRequestInfo"

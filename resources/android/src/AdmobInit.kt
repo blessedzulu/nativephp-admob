@@ -32,5 +32,6 @@ object AdmobInit {
             }
 
         BannerLifecycle.register()
+        AppOpenLifecycle.register()
     }
 }

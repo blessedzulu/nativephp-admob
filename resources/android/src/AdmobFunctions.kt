@@ -15,6 +15,7 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.OnUserEarnedRewardListener
+import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
@@ -517,7 +518,82 @@ object AdmobFunctions {
     }
 
     class LoadAppOpen(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.LoadAppOpen")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("LoadAppOpen: slot missing")
+            val unitId = parameters["unit_id"] as? String ?: return notImplemented("LoadAppOpen: unit_id missing")
+
+            AppOpenLifecycle.bindActivity(activity)
+
+            runOnUiThread {
+                AppOpenAd.load(
+                    activity,
+                    unitId,
+                    AdRequest.Builder().build(),
+                    object : AppOpenAd.AppOpenAdLoadCallback() {
+                        override fun onAdLoaded(ad: AppOpenAd) {
+                            AppOpenRegistry.put(slot, ad)
+                            dispatchEvent(activity, "AdLoaded", mapOf("slot" to slot, "format" to "app_open"))
+                        }
+
+                        override fun onAdFailedToLoad(error: LoadAdError) {
+                            AppOpenRegistry.remove(slot)
+                            dispatchEvent(
+                                activity,
+                                "AdFailedToLoad",
+                                mapOf(
+                                    "slot" to slot,
+                                    "format" to "app_open",
+                                    "errorCode" to error.code,
+                                    "errorMessage" to error.message,
+                                ),
+                            )
+                        }
+                    },
+                )
+            }
+
+            return success()
+        }
+    }
+
+    class AppOpenReady(private val activity: FragmentActivity) : BridgeFunction {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("AppOpenReady: slot missing")
+            val hasAd = AppOpenRegistry.get(slot) != null
+            val fresh = AppOpenRegistry.isFresh(slot)
+            val ageMs = AppOpenRegistry.ageMs(slot) ?: -1L
+            return success(mapOf("ready" to (hasAd && fresh), "fresh" to fresh, "age_ms" to ageMs))
+        }
+    }
+
+    class ShowAppOpen(private val activity: FragmentActivity) : BridgeFunction {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val slot = parameters["slot"] as? String ?: return notImplemented("ShowAppOpen: slot missing")
+
+            runOnUiThread {
+                val ad = AppOpenRegistry.get(slot) ?: run {
+                    dispatchEvent(
+                        activity,
+                        "AdFailedToShow",
+                        mapOf("slot" to slot, "format" to "app_open", "error" to "no_loaded_ad"),
+                    )
+                    return@runOnUiThread
+                }
+                if (!AppOpenRegistry.isFresh(slot)) {
+                    AppOpenRegistry.remove(slot)
+                    dispatchEvent(
+                        activity,
+                        "AdFailedToShow",
+                        mapOf("slot" to slot, "format" to "app_open", "error" to "stale"),
+                    )
+                    return@runOnUiThread
+                }
+                AppOpenLifecycle.attachCallback(activity, slot, ad)
+                ad.show(activity)
+            }
+
+            return success()
+        }
     }
 
     class UmpRequestInfo(private val activity: FragmentActivity) : BridgeFunction {
