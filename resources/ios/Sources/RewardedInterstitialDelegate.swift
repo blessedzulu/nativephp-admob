@@ -29,11 +29,13 @@ final class RewardedInterstitialDelegate: NSObject, FullScreenContentDelegate {
     }
 
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        FullScreenAdState.markDismissed()
         RewardedInterstitialRegistry.shared.remove(slot: slot)
         AdmobFunctions.dispatch("AdDismissed", ["slot": slot, "format": "rewarded_interstitial"])
     }
 
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+        FullScreenAdState.markDismissed()
         RewardedInterstitialRegistry.shared.remove(slot: slot)
         let nsError = error as NSError
         AdmobFunctions.dispatch("AdFailedToShow", [

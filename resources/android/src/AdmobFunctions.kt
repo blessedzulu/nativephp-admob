@@ -265,11 +265,13 @@ object AdmobFunctions {
                     }
 
                     override fun onAdDismissedFullScreenContent() {
+                        FullScreenAdState.markDismissed()
                         InterstitialRegistry.remove(slot)
                         dispatchEvent(activity, "AdDismissed", mapOf("slot" to slot, "format" to "interstitial"))
                     }
 
                     override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        FullScreenAdState.markDismissed()
                         InterstitialRegistry.remove(slot)
                         dispatchEvent(
                             activity,
@@ -363,11 +365,13 @@ object AdmobFunctions {
                     }
 
                     override fun onAdDismissedFullScreenContent() {
+                        FullScreenAdState.markDismissed()
                         RewardedRegistry.remove(slot)
                         dispatchEvent(activity, "AdDismissed", mapOf("slot" to slot, "format" to "rewarded"))
                     }
 
                     override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        FullScreenAdState.markDismissed()
                         RewardedRegistry.remove(slot)
                         dispatchEvent(
                             activity,
@@ -472,11 +476,13 @@ object AdmobFunctions {
                     }
 
                     override fun onAdDismissedFullScreenContent() {
+                        FullScreenAdState.markDismissed()
                         RewardedInterstitialRegistry.remove(slot)
                         dispatchEvent(activity, "AdDismissed", mapOf("slot" to slot, "format" to "rewarded_interstitial"))
                     }
 
                     override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        FullScreenAdState.markDismissed()
                         RewardedInterstitialRegistry.remove(slot)
                         dispatchEvent(
                             activity,

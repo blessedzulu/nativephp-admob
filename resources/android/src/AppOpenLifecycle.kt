@@ -1,5 +1,6 @@
 package com.blessedzulu.nativephp.admob
 
+import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -44,11 +45,19 @@ object AppOpenLifecycle {
         registered = true
 
         NativePHPLifecycle.on("onResume") {
+            Log.i("AppOpenLifecycle", "onResume callback fired (coldStartConsumed=$coldStartConsumed, slots=${AppOpenRegistry.allSlots().size}, activity=${activityRef?.get() != null}, recentlyDismissed=${FullScreenAdState.recentlyDismissed()})")
             if (!coldStartConsumed) {
                 coldStartConsumed = true
                 return@on
             }
-            val activity = activityRef?.get() ?: return@on
+            if (FullScreenAdState.recentlyDismissed()) {
+                Log.i("AppOpenLifecycle", "suppressing auto-show: another full-screen ad dismissed within ${FullScreenAdState.DISMISS_GRACE_MS}ms")
+                return@on
+            }
+            val activity = activityRef?.get() ?: run {
+                Log.w("AppOpenLifecycle", "activityRef null, skipping auto-show")
+                return@on
+            }
             activity.runOnUiThread {
                 AppOpenRegistry.allSlots().forEach { slot ->
                     val ad = AppOpenRegistry.get(slot) ?: return@forEach
@@ -56,11 +65,13 @@ object AppOpenLifecycle {
                         AppOpenRegistry.remove(slot)
                         return@forEach
                     }
+                    Log.i("AppOpenLifecycle", "auto-showing slot=$slot")
                     attachCallback(activity, slot, ad)
                     ad.show(activity)
                 }
             }
         }
+        Log.i("AppOpenLifecycle", "registered onResume observer")
     }
 
     /**
@@ -77,11 +88,13 @@ object AppOpenLifecycle {
             }
 
             override fun onAdDismissedFullScreenContent() {
+                FullScreenAdState.markDismissed()
                 AppOpenRegistry.remove(slot)
                 dispatch(activity, "AdDismissed", mapOf("slot" to slot, "format" to "app_open"))
             }
 
             override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                FullScreenAdState.markDismissed()
                 AppOpenRegistry.remove(slot)
                 dispatch(
                     activity,

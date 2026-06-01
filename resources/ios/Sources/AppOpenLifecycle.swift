@@ -31,6 +31,10 @@ enum AppOpenLifecycle {
                 coldStartConsumed = true
                 return
             }
+            if FullScreenAdState.recentlyDismissed() {
+                // Another full-screen ad just dismissed - suppress to avoid back-to-back presentations.
+                return
+            }
             for slot in AppOpenRegistry.shared.allSlots() {
                 guard let ad = AppOpenRegistry.shared.get(slot: slot) else { continue }
                 if !AppOpenRegistry.shared.isFresh(slot: slot) {

@@ -4,6 +4,12 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.7.1-alpha] - 2026-06-01
+
+### Fixed
+
+- **App Open auto-show no longer fires after dismissing another full-screen ad.** When an interstitial / rewarded / rewarded-interstitial dismissed, MainActivity.onResume fired (because the SDK's full-screen activity tore down) - which the AppOpenLifecycle observer interpreted as a real foreground return and auto-showed the cached App Open ad. New `FullScreenAdState` singleton (Android + iOS) tracks last-dismissal time; AppOpenLifecycle now skips auto-show within a 1500ms grace window. Every full-screen FullScreenContentCallback / FullScreenContentDelegate marks the timestamp on dismissal + on failed-show.
+
 ## [0.7.0-alpha] - 2026-06-01
 
 ### Added
