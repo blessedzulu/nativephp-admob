@@ -13,7 +13,10 @@ import GoogleMobileAds
 /// Registered once at app boot from `AdmobInit`.
 enum AppOpenLifecycle {
     private static var registered = false
-    private static var coldStartConsumed = false
+    // iOS init runs after the app finishes launching; cold-start
+    // didBecomeActive has already fired by then. Same reasoning as Android -
+    // default to "consumed" so the first observed foreground triggers auto-show.
+    private static var coldStartConsumed = true
 
     static func register() {
         guard !registered else { return }

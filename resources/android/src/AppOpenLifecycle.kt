@@ -22,7 +22,12 @@ import java.lang.ref.WeakReference
  */
 object AppOpenLifecycle {
     private var registered = false
-    private var coldStartConsumed = false
+    // NativePHP's init_function runs AFTER MainActivity.onResume on first
+    // launch, so by the time our observer subscribes the cold-start resume
+    // has already fired. Default to "consumed" so the first observed resume
+    // (background -> foreground) triggers auto-show. If no ad is loaded yet,
+    // the show path silently dispatches AdFailedToShow=no_loaded_ad.
+    private var coldStartConsumed = true
     private var activityRef: WeakReference<FragmentActivity>? = null
 
     private const val EVENT_BASE = "BlessedZulu\\NativePhpAdmob\\Events"
