@@ -45,6 +45,19 @@ class FakeBridge implements Bridge
         return $this;
     }
 
+    /**
+     * Stub the platform the Admob.Platform bridge call reports. Used by tests
+     * that exercise platform-aware behaviour (e.g. App Open test IDs, ATT).
+     */
+    public function setPlatform(string $platform): self
+    {
+        return $this->stub('Admob.Platform', [
+            'success' => true,
+            'data' => ['platform' => $platform],
+            'error' => null,
+        ]);
+    }
+
     public function assertCalled(string $method, ?Closure $matcher = null): void
     {
         $matched = array_filter(

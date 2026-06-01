@@ -7,6 +7,7 @@ namespace BlessedZulu\NativePhpAdmob;
 use BlessedZulu\NativePhpAdmob\Commands\SubstituteManifestPlaceholdersCommand;
 use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use BlessedZulu\NativePhpAdmob\Events\ConsentChanged;
+use BlessedZulu\NativePhpAdmob\Support\LoggingBridge;
 use BlessedZulu\NativePhpAdmob\Support\NativeBridge;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -17,12 +18,25 @@ class AdmobServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/admob.php', 'admob');
 
-        $this->app->singleton(Bridge::class, fn () => new NativeBridge);
+        $this->app->singleton(Bridge::class, function ($app) {
+            $bridge = new NativeBridge;
 
-        $this->app->singleton('admob', fn ($app) => new Admob(
-            $app->make(Bridge::class),
-            (array) $app['config']->get('admob', []),
-        ));
+            if ($app['config']->get('admob.debug', false)) {
+                return new LoggingBridge($bridge, $app['log']);
+            }
+
+            return $bridge;
+        });
+
+        $this->app->singleton('admob', function ($app) {
+            $config = (array) $app['config']->get('admob', []);
+
+            return new Admob(
+                $app->make(Bridge::class),
+                $config,
+                $app['cache']->store($config['frequency_store'] ?? null),
+            );
+        });
     }
 
     public function boot(): void
@@ -30,6 +44,14 @@ class AdmobServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/admob.php' => config_path('admob.php'),
         ], 'admob-config');
+
+        // Registers the `admob::` view namespace so <x-admob::banner /> resolves
+        // to resources/views/components/banner.blade.php (anonymous component).
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'admob');
+
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/admob'),
+        ], 'admob-views');
 
         Event::listen(ConsentChanged::class, function (ConsentChanged $event) {
             $this->app->make('admob')->onConsentChanged($event->status);

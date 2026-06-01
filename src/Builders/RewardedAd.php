@@ -4,31 +4,27 @@ declare(strict_types=1);
 
 namespace BlessedZulu\NativePhpAdmob\Builders;
 
-use BlessedZulu\NativePhpAdmob\Admob;
-use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use Illuminate\Support\Facades\Log;
 
-class RewardedAd
+class RewardedAd extends AdBuilder
 {
     public const FORMAT = 'rewarded';
 
-    public function __construct(
-        protected Bridge $bridge,
-        protected Admob $manager,
-        protected string $slot,
-        protected string $adUnitId,
-    ) {}
+    protected function format(): string
+    {
+        return self::FORMAT;
+    }
 
     public function load(): self
     {
-        $this->bridge->call('Admob.LoadRewarded', $this->params());
+        $this->dispatch('Admob.LoadRewarded');
 
         return $this;
     }
 
     public function isReady(): bool
     {
-        $response = $this->bridge->call('Admob.RewardedReady', $this->params());
+        $response = $this->dispatch('Admob.RewardedReady');
 
         return (bool) ($response['data']['ready'] ?? false);
     }
@@ -41,20 +37,13 @@ class RewardedAd
             return $this;
         }
 
-        $this->bridge->call('Admob.ShowRewarded', $this->params());
+        if (! $this->passesFrequencyCap()) {
+            return $this;
+        }
+
+        $this->dispatch('Admob.ShowRewarded');
+        $this->recordShow();
 
         return $this;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function params(): array
-    {
-        return [
-            'slot' => $this->slot,
-            'format' => self::FORMAT,
-            'unit_id' => $this->adUnitId,
-        ];
     }
 }

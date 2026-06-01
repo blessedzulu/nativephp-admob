@@ -2,13 +2,15 @@
 
 Google AdMob plugin for [NativePHP Mobile](https://nativephp.com). Banner, interstitial, rewarded, rewarded interstitial, and app-open ads, with built-in UMP consent and iOS App Tracking Transparency.
 
-> Status: pre-release scaffold. The PHP surface and config schema are in place; native iOS/Android implementations land across Phases 1-10.
+> Status: alpha. All five ad formats plus UMP + ATT are implemented and Android device-verified. iOS is implemented but not yet hardware-tested - please report issues at the [issue tracker](https://github.com/blessedzulu/nativephp-admob/issues).
 
 ## Features
 
 - Five ad formats: banner, interstitial, rewarded, rewarded interstitial, app open
-- Fluent, slot-based API: `Admob::interstitial('between_calculations')->load()->show()`
-- Config-driven slot names - no raw `ca-app-pub-...` IDs in app code
+- Fluent, slot-based API: `Admob::interstitial('level_complete')->load()->show()`
+- Config-driven slot names - no raw `ca-app-pub-...` IDs in app code, no env-key convention
+- `<x-admob::banner>` Blade component (no Livewire dependency)
+- Per-format / per-slot frequency caps
 - UMP (User Messaging Platform) consent flow baked in
 - iOS App Tracking Transparency (ATT) prompt baked in
 - `show()` silently no-ops until consent is granted - hard to misuse
@@ -50,20 +52,13 @@ The plugin's manifest takes care of writing this into the right places on each p
 
 You do not need to edit either of those files yourself.
 
-### Slot IDs
+### Where ad units are configured
 
-```dotenv
-# Per-slot ad unit IDs (one env var per slot you register)
-ADMOB_BANNER_CALCULATOR_BOTTOM=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-ADMOB_INTERSTITIAL_BETWEEN_CALCULATIONS=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-ADMOB_REWARDED_EXPORT_PDF=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-```
+Ad units live under named **slots** in `config/admob.php` - never as raw IDs in your app code. A slot is just a name you pick (`home_footer`, `level_complete`, ...) mapped to the AdMob ad unit ID for that placement.
 
-### SKAdNetwork list (iOS)
+The package has **no env-key convention**. It resolves a slot solely from `config('admob.slots.{format}.{name}')`. Where each ID comes from is entirely your choice - hardcode it, or read it from an env var you name yourself.
 
-The plugin ships a starter list of SKAdNetwork identifiers in its iOS Info.plist contribution. Google publishes the canonical list at [developers.google.com/admob/ios/privacy/strategies](https://developers.google.com/admob/ios/privacy/strategies) and updates it from time to time. Check that page before each App Store submission and add any new entries to your consumer app's Info.plist - your additions are merged with the plugin's defaults.
-
-To register slots, publish the config and add named entries:
+Publish the config and add your slots:
 
 ```bash
 php artisan vendor:publish --tag=admob-config
@@ -73,11 +68,30 @@ php artisan vendor:publish --tag=admob-config
 // config/admob.php
 'slots' => [
     'banner' => [
-        'calculator_bottom' => env('ADMOB_BANNER_CALCULATOR_BOTTOM'),
+        'home_footer' => env('ADMOB_BANNER_HOME_FOOTER'), // env name is yours; not required
     ],
-    // ...
+    'interstitial' => [
+        'level_complete' => 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY', // or hardcode
+    ],
+    // rewarded / rewarded_interstitial / app_open follow the same shape
 ],
 ```
+
+Outside `production`, `test_mode` is on and these IDs are ignored in favour of Google's reserved test IDs, so you cannot accidentally serve a real ad in development.
+
+### Displaying each format
+
+| Format | How to display |
+|--------|----------------|
+| Banner | `<x-admob::banner slot="home_footer" position="bottom" />` (screen-anchored native overlay, one per slot) - or manually `Admob::banner('home_footer')->load()->show('bottom')` / `->hide()` |
+| Interstitial | `Admob::interstitial('level_complete')->load();` then `->show()` when `->isReady()`; listen for lifecycle events |
+| Rewarded | `Admob::rewarded('unlock_feature')->load()->show();` grant on the `UserEarnedReward` event |
+| Rewarded interstitial | `Admob::rewardedInterstitial('session_break')->load()->show();` |
+| App open | `Admob::appOpen('cold_start')->load()` on boot; the native lifecycle observer auto-shows on foreground |
+
+### SKAdNetwork list (iOS)
+
+The plugin ships a starter list of SKAdNetwork identifiers in its iOS Info.plist contribution. Google publishes the canonical list at [developers.google.com/admob/ios/privacy/strategies](https://developers.google.com/admob/ios/privacy/strategies) and updates it from time to time. Check that page before each App Store submission and add any new entries to your consumer app's Info.plist - your additions are merged with the plugin's defaults.
 
 ## PHP Usage
 
@@ -87,27 +101,15 @@ php artisan vendor:publish --tag=admob-config
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
 
 // In a Livewire/Volt component's mount() or wherever you want a banner:
-Admob::banner('calculator_bottom')
+Admob::banner('home_footer')
     ->load()
     ->show('bottom');     // or ->show('top')
 
 // Later, when navigating away or hiding:
-Admob::banner('calculator_bottom')->hide();
+Admob::banner('home_footer')->hide();
 ```
 
-Configure the slot in your `.env`:
-
-```dotenv
-ADMOB_ENABLED=true
-ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
-ADMOB_BANNER_CALCULATOR_BOTTOM=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-```
-
-Or, if you have many slots, publish the config and edit it inline:
-
-```bash
-php artisan vendor:publish --tag=admob-config
-```
+Register the `home_footer` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)). Or skip the manual calls entirely and use the [Blade component](#blade), which loads, shows, and tears the banner down for you.
 
 The banner uses Google's **adaptive banner** sizing — the SDK picks the right height for the device. Width is full screen width. Banners are attached to the activity's root view (Android) or key window (iOS) as an overlay, so they don't shift your existing layout.
 
@@ -147,11 +149,7 @@ public function onDismissed(string $slot, string $format): void
 
 Interstitials are **one-shot**: each loaded ad survives until it is shown and dismissed, then the slot must be loaded again. The plugin clears the registry slot on `AdDismissed` and `AdFailedToShow` automatically.
 
-Configure the slot in your `.env`:
-
-```dotenv
-ADMOB_INTERSTITIAL_BETWEEN_CALCULATIONS=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-```
+Register the `between_calculations` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)).
 
 Events dispatched for the interstitial lifecycle: `AdLoaded`, `AdFailedToLoad`, `AdShown`, `AdFailedToShow`, `AdImpression`, `AdClicked`, `AdDismissed`. Listen with `#[OnNative(EventClass::class)]` on any Livewire component.
 
@@ -198,11 +196,7 @@ public function onDismissed(string $slot, string $format): void
 
 The `UserEarnedReward` event fires ONLY if the user watches to the rewardable threshold. Dismissing early fires `AdDismissed` without `UserEarnedReward`.
 
-Configure the slot:
-
-```dotenv
-ADMOB_REWARDED_EXPORT_PDF=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-```
+Register the `export_pdf` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)).
 
 ### Rewarded interstitial ads (available since v0.6.0-alpha)
 
@@ -259,11 +253,7 @@ if (Admob::appOpen('paywall_dismissed')->isReady()) {
 }
 ```
 
-Configure the slot:
-
-```dotenv
-ADMOB_APP_OPEN_WARM_RESUME=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-```
+Register the `warm_resume` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)).
 
 ### Other formats
 
@@ -311,12 +301,25 @@ class ExportPdf extends Component
 ### Blade
 
 ```blade
-<x-admob::banner slot="calculator_bottom" position="bottom" />
+<x-admob::banner slot="home_footer" position="bottom" />
 ```
+
+Drop this on any page that should show a banner. On render it loads and shows the banner for the slot; when you navigate away it tears the native overlay down for you. Because the banner is a screen-anchored native overlay (not a WebView element), teardown happens by listening for a DOM event and calling `Admob.HideBanner` through NativePHP's own JS bridge.
+
+**No Livewire dependency.** The teardown events are configurable, defaulting to Livewire's SPA navigation:
+
+```php
+// config/admob.php
+'banner' => [
+    'hide_on_events' => ['livewire:navigating'], // override for a different router, or [] to disable
+],
+```
+
+If your app doesn't navigate via Livewire, point `hide_on_events` at whatever your router emits, or set it to `[]` and call `Admob::banner($slot)->hide()` yourself. Notes: one native overlay exists per slot; sharing a slot across pages is safe; don't mount two different positions for the same slot at once (last wins).
 
 ## JavaScript Usage
 
-> _Coming in Phase 3 alongside the JS library stub._
+The banner component tears its overlay down from JavaScript via NativePHP's bridge endpoint (`POST /_native/api/call` with `{ "method": "Admob.HideBanner", "params": { "slot": "..." } }`). You can call any bridge method the same way - no Livewire required - which is how the no-dependency teardown works.
 
 ## Events
 
@@ -329,7 +332,8 @@ class ExportPdf extends Component
 | `AdFailedToShow` | `slot`, `format`, `errorCode`, `errorMessage` |
 | `AdImpression` | `slot`, `format` |
 | `AdClicked` | `slot`, `format` |
-| `UserEarnedReward` | `slot`, `type`, `amount` |
+| `UserEarnedReward` | `slot`, `format`, `type`, `amount` |
+| `AdShowThrottled` | `slot`, `format`, `reason` |
 | `ConsentFormShown` | - |
 | `ConsentFormDismissed` | `status` |
 | `ConsentChanged` | `status` |
@@ -366,6 +370,26 @@ ADMOB_TEST_DEVICES=<UMP-hashed-device-id>
 The UMP-hashed device ID is printed to logcat / the Xcode console on the first `requestConsentInfo()` call on an unconfigured device (it is **not** the same value as the Mobile Ads test-device ID). Copy it from the log into `ADMOB_TEST_DEVICES` and relaunch. Set `ADMOB_UMP_DEBUG_GEOGRAPHY=DISABLED` (the default) for production.
 
 You are responsible for following Google's [AdMob policies](https://support.google.com/admob/answer/6128543) and Apple's [App Tracking Transparency requirements](https://developer.apple.com/app-store/user-privacy-and-data-use/).
+
+## Frequency caps
+
+Throttle how often the full-screen formats (interstitial, rewarded, rewarded interstitial, app open) show, per format or per slot. Banners are exempt. Both constraints are opt-in - omit or set `0` to disable. Caps are persisted in the cache, so they survive app relaunches, and reset at local midnight. `test_mode` bypasses caps so you can spam-test.
+
+```php
+// config/admob.php
+'frequency' => [
+    'interstitial' => ['min_interval_seconds' => 60, 'max_per_day' => 10],
+    'slots' => [
+        'interstitial' => ['level_complete' => ['min_interval_seconds' => 30]], // per-slot overrides per-format
+    ],
+],
+```
+
+When a `show()` is suppressed, it no-ops and dispatches `AdShowThrottled` (`slot`, `format`, `reason` = `cooldown` | `daily_cap`) so you can react or log it.
+
+## Debugging
+
+Set `ADMOB_DEBUG=true` to trace every native bridge call (method, params, and response) at `debug` log level. When a bridge call fails (`success: false`), the plugin logs a warning rather than throwing - a failed ad never crashes your app.
 
 ## Testing
 

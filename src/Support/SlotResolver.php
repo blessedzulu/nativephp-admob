@@ -13,10 +13,10 @@ class SlotResolver
      */
     public function __construct(protected array $config) {}
 
-    public function resolve(string $format, string $slot): string
+    public function resolve(string $format, string $slot, ?string $platform = null): string
     {
         if ($this->config['test_mode'] ?? false) {
-            return TestAdUnits::for($format);
+            return TestAdUnits::forPlatform($format, $platform);
         }
 
         $unit = $this->config['slots'][$format][$slot] ?? null;

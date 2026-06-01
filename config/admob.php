@@ -21,6 +21,10 @@ return [
     // test_mode=true and looking at the device log.
     'test_devices' => array_values(array_filter(array_map('trim', explode(',', (string) env('ADMOB_TEST_DEVICES', ''))))),
 
+    // When true, every bridge call (method + params + response) is traced at
+    // debug log level via a LoggingBridge decorator. Leave off in production.
+    'debug' => env('ADMOB_DEBUG', false),
+
     'consent' => [
         // EU/UK User Messaging Platform consent form. Required for serving
         // personalised ads in EEA + UK. Set false only if your audience is
@@ -40,24 +44,53 @@ return [
     ],
 
     // Named slots resolved by Admob::banner('slot'), ::interstitial('slot'),
-    // etc. Slot names are app-defined; keep them human-readable. Each value
-    // is the AdMob ad unit ID for that placement (ca-app-pub-XXXX/YYYY).
+    // etc. Slots are entirely app-defined: you choose the names and where their
+    // ad unit IDs come from. The package has NO env-key convention - the
+    // env(...) calls below are illustrative only. Slots are resolved solely from
+    // config('admob.slots.{format}.{name}'); each value is the AdMob ad unit ID
+    // for that placement (ca-app-pub-XXXX/YYYY). Defaults are empty.
     'slots' => [
         'banner' => [
-            // 'calculator_bottom' => env('ADMOB_BANNER_CALCULATOR_BOTTOM'),
+            // 'home_footer' => env('ADMOB_BANNER_HOME_FOOTER'),
         ],
         'interstitial' => [
-            // 'between_calculations' => env('ADMOB_INTERSTITIAL_BETWEEN_CALCULATIONS'),
+            // 'level_complete' => env('ADMOB_INTERSTITIAL_LEVEL_COMPLETE'),
         ],
         'rewarded' => [
-            // 'export_pdf' => env('ADMOB_REWARDED_EXPORT_PDF'),
+            // 'unlock_feature' => env('ADMOB_REWARDED_UNLOCK_FEATURE'),
         ],
         'rewarded_interstitial' => [
-            // 'chapter_break' => env('ADMOB_REWARDED_INTERSTITIAL_CHAPTER_BREAK'),
+            // 'session_break' => env('ADMOB_REWARDED_INTERSTITIAL_SESSION_BREAK'),
         ],
         'app_open' => [
             // 'cold_start' => env('ADMOB_APPOPEN_COLD_START'),
         ],
     ],
+
+    // Banner-specific behaviour for the <x-admob::banner> component. The native
+    // banner is a screen overlay that survives WebView navigation, so the
+    // component tears it down by listening for these DOM events and calling
+    // Admob.HideBanner. Default targets Livewire SPA navigation. Override for a
+    // different router, or set to [] to disable auto-hide (call ->hide() yourself).
+    'banner' => [
+        'hide_on_events' => ['livewire:navigating'],
+    ],
+
+    // Per-format show throttling for the full-screen formats (interstitial,
+    // rewarded, rewarded_interstitial, app_open). Both constraints are opt-in:
+    // 0 or omitted means no limit. Per-slot entries under 'slots' override the
+    // per-format defaults. Banner is exempt (it's a persistent overlay).
+    // test_mode bypasses all caps. Persisted in the cache so caps survive
+    // relaunches.
+    'frequency' => [
+        // 'interstitial' => ['min_interval_seconds' => 60, 'max_per_day' => 10],
+        // 'rewarded_interstitial' => ['min_interval_seconds' => 120],
+        // 'slots' => [
+        //     'interstitial' => ['level_complete' => ['min_interval_seconds' => 30]],
+        // ],
+    ],
+
+    // Cache store used to persist frequency-cap counters. null = default store.
+    'frequency_store' => env('ADMOB_FREQUENCY_STORE', null),
 
 ];

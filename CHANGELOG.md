@@ -4,6 +4,22 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.9.0-alpha] - 2026-06-01
+
+Polish pass before the Marketplace/v1.0 push.
+
+### Added
+
+- **`<x-admob::banner slot="..." position="bottom" />` Blade component.** Loads + shows a banner on render and tears the native overlay down on navigation. **No Livewire dependency** - teardown listens for configurable DOM events (`config('admob.banner.hide_on_events')`, default `['livewire:navigating']`) and calls `Admob.HideBanner` via NativePHP's JS bridge (`POST /_native/api/call`). Override the events for a different router, or set `[]` and call `->hide()` yourself.
+- **Frequency caps.** Per-format and per-slot `min_interval_seconds` + `max_per_day` for the full-screen formats (banner exempt), configured under `config('admob.frequency')`. Persisted in the cache (survives relaunch, resets at local midnight); `test_mode` bypasses. A suppressed `show()` no-ops and dispatches the new **`AdShowThrottled`** event (`slot`, `format`, `reason`).
+- **Debug tracing.** `ADMOB_DEBUG=true` wraps the bridge in a `LoggingBridge` that traces every call (method, params, response) at `debug` level.
+- **Platform-aware test ad units.** `TestAdUnits::forPlatform()` resolves the App Open test ID per platform (Android `…/9257395921` vs iOS `…/5662855259`); previously hardcoded to Android, so the iOS App Open test ad would fail to load. All other formats remain universal. `FakeBridge::setPlatform()` added for tests.
+
+### Changed
+
+- **Bridge failures are no longer swallowed.** A new `AdBuilder` base routes every builder call through a `dispatch()` helper that logs a warning on a `success: false` response (no throw - a failed ad must not crash the app). All five builders now extend it.
+- **Config + README made package-agnostic.** Removed the implication of an `ADMOB_{FORMAT}_{SLOT}` env-key convention - slots are resolved solely from `config('admob.slots.{format}.{name}')`, and any env names are the consumer's own choice. README gains "Where ad units are configured", a "Displaying each format" matrix, and frequency-cap / debug / failure-logging docs.
+
 ## [0.8.0-alpha] - 2026-06-01
 
 Ships the two compliance surfaces (Phases 7 + 8): real UMP consent and real iOS App Tracking Transparency. With this release every previously-stubbed bridge function is real - only iOS device verification remains outstanding.

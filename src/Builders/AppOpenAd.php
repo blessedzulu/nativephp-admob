@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace BlessedZulu\NativePhpAdmob\Builders;
 
-use BlessedZulu\NativePhpAdmob\Admob;
-use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -17,27 +15,25 @@ use Illuminate\Support\Facades\Log;
  * wants explicit control over timing (e.g. on a specific in-app event rather
  * than on every foreground).
  */
-class AppOpenAd
+class AppOpenAd extends AdBuilder
 {
     public const FORMAT = 'app_open';
 
-    public function __construct(
-        protected Bridge $bridge,
-        protected Admob $manager,
-        protected string $slot,
-        protected string $adUnitId,
-    ) {}
+    protected function format(): string
+    {
+        return self::FORMAT;
+    }
 
     public function load(): self
     {
-        $this->bridge->call('Admob.LoadAppOpen', $this->params());
+        $this->dispatch('Admob.LoadAppOpen');
 
         return $this;
     }
 
     public function isReady(): bool
     {
-        $response = $this->bridge->call('Admob.AppOpenReady', $this->params());
+        $response = $this->dispatch('Admob.AppOpenReady');
 
         return (bool) ($response['data']['ready'] ?? false);
     }
@@ -50,20 +46,13 @@ class AppOpenAd
             return $this;
         }
 
-        $this->bridge->call('Admob.ShowAppOpen', $this->params());
+        if (! $this->passesFrequencyCap()) {
+            return $this;
+        }
+
+        $this->dispatch('Admob.ShowAppOpen');
+        $this->recordShow();
 
         return $this;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function params(): array
-    {
-        return [
-            'slot' => $this->slot,
-            'format' => self::FORMAT,
-            'unit_id' => $this->adUnitId,
-        ];
     }
 }

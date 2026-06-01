@@ -44,7 +44,12 @@ class Admob extends Facade
 
         $app->instance(Bridge::class, $fake);
 
-        $manager = new AdmobManager($fake, (array) $app['config']->get('admob', []));
+        $config = (array) $app['config']->get('admob', []);
+        $manager = new AdmobManager(
+            $fake,
+            $config,
+            $app['cache']->store($config['frequency_store'] ?? null),
+        );
         $manager->setCanRequestAds(true);
 
         $app->instance('admob', $manager);
