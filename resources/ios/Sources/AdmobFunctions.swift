@@ -371,7 +371,83 @@ enum AdmobFunctions {
     }
 
     class LoadAppOpen: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] { AdmobFunctions.notImplemented("Admob.LoadAppOpen") }
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("LoadAppOpen: slot missing")
+            }
+            guard let unitId = parameters["unit_id"] as? String else {
+                return AdmobFunctions.notImplemented("LoadAppOpen: unit_id missing")
+            }
+
+            AppOpenAd.load(with: unitId, request: Request()) { ad, error in
+                if let error = error {
+                    AppOpenRegistry.shared.remove(slot: slot)
+                    let nsError = error as NSError
+                    AdmobFunctions.dispatch("AdFailedToLoad", [
+                        "slot": slot,
+                        "format": "app_open",
+                        "errorCode": nsError.code,
+                        "errorMessage": error.localizedDescription,
+                    ])
+                    return
+                }
+                guard let ad = ad else { return }
+                let delegate = AppOpenDelegate(slot: slot)
+                ad.fullScreenContentDelegate = delegate
+                AppOpenRegistry.shared.put(slot: slot, ad: ad, delegate: delegate)
+                AdmobFunctions.dispatch("AdLoaded", ["slot": slot, "format": "app_open"])
+            }
+
+            return AdmobFunctions.success()
+        }
+    }
+
+    class AppOpenReady: BridgeFunction {
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("AppOpenReady: slot missing")
+            }
+            let hasAd = AppOpenRegistry.shared.get(slot: slot) != nil
+            let fresh = AppOpenRegistry.shared.isFresh(slot: slot)
+            return AdmobFunctions.success([
+                "ready": hasAd && fresh,
+                "fresh": fresh,
+                "age_ms": AppOpenRegistry.shared.ageMs(slot: slot),
+            ])
+        }
+    }
+
+    class ShowAppOpen: BridgeFunction {
+        func execute(parameters: [String: Any]) throws -> [String: Any] {
+            guard let slot = parameters["slot"] as? String else {
+                return AdmobFunctions.notImplemented("ShowAppOpen: slot missing")
+            }
+
+            DispatchQueue.main.async {
+                guard let ad = AppOpenRegistry.shared.get(slot: slot) else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "app_open", "error": "no_loaded_ad",
+                    ])
+                    return
+                }
+                if !AppOpenRegistry.shared.isFresh(slot: slot) {
+                    AppOpenRegistry.shared.remove(slot: slot)
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "app_open", "error": "stale",
+                    ])
+                    return
+                }
+                guard let root = AdmobFunctions.rootViewController() else {
+                    AdmobFunctions.dispatch("AdFailedToShow", [
+                        "slot": slot, "format": "app_open", "error": "no_root_view_controller",
+                    ])
+                    return
+                }
+                ad.present(from: root)
+            }
+
+            return AdmobFunctions.success()
+        }
     }
 
     class UmpRequestInfo: BridgeFunction {

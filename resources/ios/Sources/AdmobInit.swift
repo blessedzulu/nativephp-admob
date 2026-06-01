@@ -28,5 +28,6 @@ enum AdmobInit {
         }
 
         BannerLifecycle.register()
+        AppOpenLifecycle.register()
     }
 }
