@@ -2,7 +2,7 @@
 
 Google AdMob plugin for [NativePHP Mobile](https://nativephp.com). Banner, interstitial, rewarded, rewarded interstitial, and app-open ads, with built-in UMP consent and iOS App Tracking Transparency.
 
-> Status: alpha. All five ad formats plus UMP + ATT are implemented and Android device-verified. iOS is implemented but not yet hardware-tested - please report issues at the [issue tracker](https://github.com/blessedzulu/nativephp-admob/issues).
+> Status: 1.0.0-beta. Feature-complete and API-stable; all five ad formats plus UMP + ATT, the JS API, and the `<admob-banner>` Web Component are implemented and **Android device-verified**. **iOS is implemented but not yet tested on hardware** - treat it as beta and please report issues at the [issue tracker](https://github.com/blessedzulu/nativephp-admob/issues).
 
 ## Features
 

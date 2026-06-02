@@ -4,6 +4,14 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [1.0.0-beta] - 2026-06-02
+
+First beta. The plugin is feature-complete and the public API (facade, slots, config, JS API, Blade/Web components, events) is considered stable.
+
+**Included:** all five ad formats (banner, interstitial, rewarded, rewarded interstitial, app open); UMP consent + iOS ATT; frequency caps; `ADMOB_ENABLED` kill-switch; `ADMOB_DEBUG` bridge tracing; agnostic named-slot config + platform-aware test ad units; the JavaScript API (`Admob` module + `<admob-banner>` Web Component) over a CSRF-exempt `/_admob/call` endpoint that runs the PHP facade; the `<x-admob::banner>` Blade component; the built-in self-contained test page; banner offset + auto safe-area inset. 82 tests.
+
+**Beta caveat:** everything is **Android device-verified**, but **iOS has not yet been run on hardware** (it's implemented to Google's canonical samples). Verify on iOS before shipping iOS production ads. No API changes are expected before 1.0.0.
+
 ## [0.13.1-alpha] - 2026-06-02
 
 ### Changed
