@@ -34,21 +34,41 @@ export function setEndpoint(url) {
     endpoint = url;
 }
 
-async function call(body) {
-    try {
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-            },
-            body: JSON.stringify(body),
-        });
-
-        return res.ok ? await res.json() : { ok: false, error: `http_${res.status}` };
-    } catch (e) {
-        return { ok: false, error: 'network_error' };
+/*
+ * Serialize calls through one shared queue. NativePHP correlates captured fetch
+ * bodies by URL, so several near-simultaneous POSTs to the same endpoint can
+ * drop bodies (-> empty request -> 422). Chaining every call onto a single
+ * window-level promise sends them one at a time, so a burst (e.g. two banners
+ * mounting together) never races. Shared on window so the Blade component and
+ * the test page enqueue onto the same chain.
+ */
+function enqueue(task) {
+    const q = (typeof window !== 'undefined' && window.__admobCallQueue) || Promise.resolve();
+    const run = q.then(task, task);
+    if (typeof window !== 'undefined') {
+        window.__admobCallQueue = run.catch(() => {});
     }
+
+    return run;
+}
+
+function call(body) {
+    return enqueue(async () => {
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                },
+                body: JSON.stringify(body),
+            });
+
+            return res.ok ? await res.json() : { ok: false, error: `http_${res.status}` };
+        } catch (e) {
+            return { ok: false, error: 'network_error' };
+        }
+    });
 }
 
 function fullScreen(format, slot) {

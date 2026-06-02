@@ -15,7 +15,8 @@ it('emits a one-shot mount that loads + shows via the JS endpoint', function () 
         ->assertSee("_call('load')", false)
         ->assertSee("_call('show'", false)
         ->assertSee('home_footer', false)
-        ->assertSee('position', false);
+        ->assertSee('position', false)
+        ->assertSee('__admobCallQueue', false);  // calls serialized through the shared queue
 });
 
 it('listens on both window and document for each configured nav event, with cleanup', function () {

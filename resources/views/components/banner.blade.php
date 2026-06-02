@@ -35,7 +35,7 @@
     x-data="{
         _ac: null,
         _call(action, extra = {}) {
-            return fetch(@js($endpoint), {
+            const run = () => fetch(@js($endpoint), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -43,6 +43,11 @@
                 },
                 body: JSON.stringify({ kind: 'ad', format: 'banner', slot: @js($admobSlot), action, ...extra }),
             }).catch(() => {});
+            // Serialize onto the shared queue so concurrent banners don't race
+            // NativePHP's URL-keyed body capture (which would 422 some calls).
+            const q = (window.__admobCallQueue || Promise.resolve()).then(run, run);
+            window.__admobCallQueue = q.catch(() => {});
+            return q;
         },
         async _mount() {
             await this._call('load');

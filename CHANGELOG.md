@@ -4,6 +4,12 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.11.1-alpha] - 2026-06-02
+
+### Fixed
+
+- **JS API calls are now serialized so concurrent calls can't race.** NativePHP correlates captured `fetch` bodies by URL, so several near-simultaneous POSTs to `/_admob/call` could drop bodies and return 422 (seen when multiple banners mount together). All callers - the `Admob` JS API, the `<x-admob::banner>` component, and the built-in test page - now chain requests through a single shared `window.__admobCallQueue`, sending them one at a time. Multi-banner screens (e.g. a sticky bottom banner + another placement) are race-free.
+
 ## [0.11.0-alpha] - 2026-06-02
 
 ### Added

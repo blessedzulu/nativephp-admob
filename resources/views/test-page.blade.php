@@ -119,21 +119,28 @@
             logEl.prepend(d);
         }
 
-        async function call(body) {
-            try {
-                const res = await fetch(ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                const json = await res.json().catch(() => ({}));
-                const tag = body.kind + (body.format ? '/' + body.format : '') + ' ' + body.action;
-                log('→ ' + tag + '  ⇒  ' + JSON.stringify(json), res.ok ? null : 'err');
-                return json;
-            } catch (e) {
-                log('→ ' + body.action + '  ⇒  network_error', 'err');
-                return {};
-            }
+        // Serialize onto a shared queue so bursts never race NativePHP's
+        // URL-keyed POST-body capture (which would 422 some calls).
+        function call(body) {
+            const run = async () => {
+                try {
+                    const res = await fetch(ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body),
+                    });
+                    const json = await res.json().catch(() => ({}));
+                    const tag = body.kind + (body.format ? '/' + body.format : '') + ' ' + body.action;
+                    log('→ ' + tag + '  ⇒  ' + JSON.stringify(json), res.ok ? null : 'err');
+                    return json;
+                } catch (e) {
+                    log('→ ' + body.action + '  ⇒  network_error', 'err');
+                    return {};
+                }
+            };
+            const q = (window.__admobCallQueue || Promise.resolve()).then(run, run);
+            window.__admobCallQueue = q.catch(() => {});
+            return q;
         }
 
         function slotOf(format) {
