@@ -120,6 +120,19 @@ return [
      */
     'banner' => [
         'hide_on_events' => ['livewire:navigating', 'inertia:before', 'pagehide'],
+
+        /*
+         * Extra gap (density-independent pixels) between the banner and its
+         * screen edge, per position. The banner is a native overlay pinned to
+         * the top or bottom edge, so use this to clear chrome it would otherwise
+         * sit on top of - most commonly a native bottom-nav. iOS already insets
+         * for the system safe area; this adds on top of that. Override per call
+         * with ->show($position, $offset) or <admob-banner offset="...">.
+         */
+        'offset' => [
+            'top' => (int) env('ADMOB_BANNER_OFFSET_TOP', 0),
+            'bottom' => (int) env('ADMOB_BANNER_OFFSET_BOTTOM', 0),
+        ],
     ],
 
     /*

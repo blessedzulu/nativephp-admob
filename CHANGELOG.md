@@ -4,7 +4,12 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
-## [0.11.1-alpha] - 2026-06-02
+## [0.12.0-alpha] - 2026-06-02
+
+### Added
+
+- **Banner offset.** The banner is a screen-edge native overlay, so it could sit on top of chrome like a native bottom-nav. You can now lift it off the edge: `config('admob.banner.offset.{top,bottom}')` (dp), or per call via `Admob::banner($slot)->show('bottom', 56)`, `<admob-banner offset="56">`, and `<x-admob::banner offset="56">`. Applied natively as a container margin (Android) / safe-area constraint constant (iOS, on top of the existing safe-area inset). The built-in test page gained an offset field.
+- **The built-in test page now allows ads in `test_mode`** (forces `canRequestAds`), so it shows Google's demo ads without a real consent flow - the page is otherwise useless until consent resolves.
 
 ### Fixed
 

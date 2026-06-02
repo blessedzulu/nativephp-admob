@@ -131,6 +131,7 @@ object AdmobFunctions {
         override fun execute(parameters: Map<String, Any>): Map<String, Any> {
             val slot = parameters["slot"] as? String ?: return notImplemented("ShowBanner: slot missing")
             val position = (parameters["position"] as? String) ?: "bottom"
+            val offsetDp = (parameters["offset"] as? Number)?.toInt() ?: 0
 
             runOnUiThread {
                 val adView = BannerRegistry.get(slot) ?: run {
@@ -148,12 +149,15 @@ object AdmobFunctions {
 
                 (adView.parent as? ViewGroup)?.removeView(adView)
 
+                val offsetPx = (offsetDp * activity.resources.displayMetrics.density).toInt()
+
                 val container = FrameLayout(activity)
                 val containerParams = FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.WRAP_CONTENT,
                 ).apply {
                     gravity = if (position == "top") Gravity.TOP else Gravity.BOTTOM
+                    if (position == "top") topMargin = offsetPx else bottomMargin = offsetPx
                 }
 
                 val adViewParams = FrameLayout.LayoutParams(

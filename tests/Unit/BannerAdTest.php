@@ -25,6 +25,23 @@ it('shows a banner at the requested position', function () {
     $fake->assertCalled('Admob.ShowBanner', fn (array $p) => $p['position'] === 'top');
 });
 
+it('passes an explicit offset through to show', function () {
+    $fake = Admob::fake();
+
+    Admob::banner('footer')->show('bottom', 56);
+
+    $fake->assertCalled('Admob.ShowBanner', fn (array $p) => $p['position'] === 'bottom' && $p['offset'] === 56);
+});
+
+it('falls back to the configured per-position offset', function () {
+    config(['admob.banner.offset.bottom' => 72]);
+    $fake = Admob::fake();
+
+    Admob::banner('footer')->show('bottom');
+
+    $fake->assertCalled('Admob.ShowBanner', fn (array $p) => $p['offset'] === 72);
+});
+
 it('hides a banner', function () {
     $fake = Admob::fake();
 

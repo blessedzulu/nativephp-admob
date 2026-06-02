@@ -21,13 +21,19 @@
       slot     - the configured banner slot name (required). Read from
                  $attributes because `slot` is a reserved Blade component variable.
       position - 'bottom' (default) | 'top'
+      offset   - extra gap (dp) from the screen edge, to clear chrome like a
+                 native bottom-nav. Defaults to config('admob.banner.offset.*').
 --}}
-@props(['position' => 'bottom'])
+@props(['position' => 'bottom', 'offset' => null])
 
 @php
     $admobSlot = (string) $attributes->get('slot');
     $endpoint = '/'.ltrim((string) config('admob.js_api_prefix', '_admob'), '/').'/call';
     $hideOn = (array) config('admob.banner.hide_on_events', ['livewire:navigating', 'inertia:before', 'pagehide']);
+    $showExtra = ['position' => $position];
+    if (! is_null($offset)) {
+        $showExtra['offset'] = (int) $offset;
+    }
 @endphp
 
 <div
@@ -51,7 +57,7 @@
         },
         async _mount() {
             await this._call('load');
-            await this._call('show', { position: @js($position) });
+            await this._call('show', @js($showExtra));
         }
     }"
     x-init="

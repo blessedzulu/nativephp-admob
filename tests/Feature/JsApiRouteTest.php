@@ -28,6 +28,15 @@ it('loads, shows, and hides a banner through the facade', function () {
     $fake->assertCalled('Admob.HideBanner');
 });
 
+it('passes a banner offset through to the facade', function () {
+    $fake = Admob::fake();
+
+    $this->postJson('/_admob/call', ['kind' => 'ad', 'format' => 'banner', 'slot' => 'home_footer', 'action' => 'show', 'position' => 'bottom', 'offset' => 56])
+        ->assertOk();
+
+    $fake->assertCalled('Admob.ShowBanner', fn ($p) => $p['offset'] === 56);
+});
+
 it('reports interstitial readiness', function () {
     Admob::fake()->stub('Admob.InterstitialReady', ['success' => true, 'data' => ['ready' => true], 'error' => null]);
 

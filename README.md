@@ -308,6 +308,8 @@ class ExportPdf extends Component
 
 Drop this on any page that should show a banner. On render it loads and shows the banner for the slot; when you navigate away it tears the native overlay down for you. Because the banner is a screen-anchored native overlay (not a WebView element), teardown happens by listening for a DOM event and calling `Admob.HideBanner` through NativePHP's own JS bridge.
 
+Since the banner pins to the very top/bottom edge, it can sit on top of chrome like a native bottom-nav. Lift it off the edge with an **offset** (dp) - per call (`<x-admob::banner slot="home_footer" offset="56" />`, `<admob-banner offset="56">`, `Admob::banner('home_footer')->show('bottom', 56)`) or globally via `config('admob.banner.offset.{top,bottom}')`.
+
 **No Livewire dependency.** The teardown events are configurable, defaulting to Livewire's SPA navigation:
 
 ```php

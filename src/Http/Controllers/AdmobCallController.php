@@ -56,7 +56,7 @@ class AdmobCallController
         return match ((string) $request->input('action')) {
             'load' => $this->ok(fn () => $builder->load()),
             'show' => $this->ok(fn () => $format === 'banner'
-                ? $builder->show($this->position($request))
+                ? $builder->show($this->position($request), $this->offset($request))
                 : $builder->show()),
             'hide' => $format === 'banner'
                 ? $this->ok(fn () => $builder->hide())
@@ -108,5 +108,12 @@ class AdmobCallController
     private function position(Request $request): string
     {
         return $request->input('position') === 'top' ? 'top' : 'bottom';
+    }
+
+    private function offset(Request $request): ?int
+    {
+        $offset = $request->input('offset');
+
+        return is_numeric($offset) ? (int) $offset : null;
     }
 }

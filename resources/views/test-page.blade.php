@@ -79,12 +79,14 @@
         <h2>Banner</h2>
         <div class="row">
             <input id="slot-banner" value="test_banner" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <input id="banner-offset" type="number" value="0" inputmode="numeric" style="flex:0 0 90px" title="offset dp">
         </div>
         <div class="row" style="margin-top:8px">
             <button class="primary" onclick="bannerShow()">Show</button>
             <button onclick="ad('banner','hide')">Hide</button>
             <button onclick="flip()">Flip <span id="pos">bottom</span></button>
         </div>
+        <p class="note">Offset (dp) lifts the banner off the edge - use it to clear a bottom-nav.</p>
     </div>
 
     @foreach (['interstitial' => 'Interstitial', 'rewarded' => 'Rewarded', 'rewarded_interstitial' => 'Rewarded Interstitial', 'app_open' => 'App Open'] as $fmt => $label)
@@ -150,15 +152,20 @@
         function ad(format, action) {
             return call({ kind: 'ad', format, slot: slotOf(format), action });
         }
+        function bannerOffset() {
+            return parseInt(document.getElementById('banner-offset')?.value, 10) || 0;
+        }
         async function bannerShow() {
-            await call({ kind: 'ad', format: 'banner', slot: slotOf('banner'), action: 'load' });
-            await call({ kind: 'ad', format: 'banner', slot: slotOf('banner'), action: 'show', position });
+            const slot = slotOf('banner');
+            await call({ kind: 'ad', format: 'banner', slot, action: 'load' });
+            await call({ kind: 'ad', format: 'banner', slot, action: 'show', position, offset: bannerOffset() });
         }
         function flip() {
             position = position === 'bottom' ? 'top' : 'bottom';
             document.getElementById('pos').textContent = position;
-            call({ kind: 'ad', format: 'banner', slot: slotOf('banner'), action: 'hide' });
-            call({ kind: 'ad', format: 'banner', slot: slotOf('banner'), action: 'show', position });
+            const slot = slotOf('banner');
+            call({ kind: 'ad', format: 'banner', slot, action: 'hide' });
+            call({ kind: 'ad', format: 'banner', slot, action: 'show', position, offset: bannerOffset() });
         }
         async function ready(format) {
             const r = await call({ kind: 'ad', format, slot: slotOf(format), action: 'isReady' });

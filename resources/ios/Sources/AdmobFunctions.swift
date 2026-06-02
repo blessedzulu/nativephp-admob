@@ -92,6 +92,7 @@ enum AdmobFunctions {
                 return AdmobFunctions.notImplemented("ShowBanner: slot missing")
             }
             let position = (parameters["position"] as? String) ?? "bottom"
+            let offset = (parameters["offset"] as? NSNumber)?.doubleValue ?? 0
 
             DispatchQueue.main.async {
                 guard let bannerView = BannerRegistry.shared.get(slot: slot) else {
@@ -113,8 +114,8 @@ enum AdmobFunctions {
                     bannerView.widthAnchor.constraint(equalToConstant: bannerView.adSize.size.width),
                     bannerView.heightAnchor.constraint(equalToConstant: bannerView.adSize.size.height),
                     position == "top"
-                        ? bannerView.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor)
-                        : bannerView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor),
+                        ? bannerView.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor, constant: offset)
+                        : bannerView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor, constant: -offset),
                 ])
 
                 BannerRegistry.shared.putContainer(slot: slot, container: bannerView)

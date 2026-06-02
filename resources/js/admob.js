@@ -82,7 +82,10 @@ function fullScreen(format, slot) {
 export const Admob = {
     banner: (slot) => ({
         load: () => call({ kind: 'ad', format: 'banner', slot, action: 'load' }),
-        show: (position = 'bottom') => call({ kind: 'ad', format: 'banner', slot, action: 'show', position }),
+        show: (position = 'bottom', offset = null) => call({
+            kind: 'ad', format: 'banner', slot, action: 'show', position,
+            ...(offset != null ? { offset } : {}),
+        }),
         hide: () => call({ kind: 'ad', format: 'banner', slot, action: 'hide' }),
     }),
     interstitial: (slot) => fullScreen('interstitial', slot),
@@ -141,11 +144,13 @@ class AdmobBannerElement extends HTMLElement {
     async connectedCallback() {
         this._slot = this.getAttribute('slot') || '';
         this._position = this.getAttribute('position') || 'bottom';
+        const offsetAttr = this.getAttribute('offset');
+        this._offset = offsetAttr != null && offsetAttr !== '' ? parseInt(offsetAttr, 10) : null;
         if (!this._slot) {
             return;
         }
         await Admob.banner(this._slot).load();
-        await Admob.banner(this._slot).show(this._position);
+        await Admob.banner(this._slot).show(this._position, this._offset);
     }
 
     disconnectedCallback() {
