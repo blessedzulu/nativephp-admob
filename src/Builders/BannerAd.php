@@ -38,7 +38,11 @@ class BannerAd extends AdBuilder
 
         $offset ??= (int) config("admob.banner.offset.{$position}", 0);
 
-        $this->dispatch('Admob.ShowBanner', ['position' => $position, 'offset' => $offset]);
+        $this->dispatch('Admob.ShowBanner', [
+            'position' => $position,
+            'offset' => $offset,
+            'safe_area' => (bool) config('admob.banner.safe_area', true),
+        ]);
 
         return $this;
     }

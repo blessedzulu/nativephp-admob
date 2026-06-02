@@ -4,6 +4,16 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.13.0-alpha] - 2026-06-02
+
+### Added
+
+- **Banner auto safe-area inset (Android).** The banner now insets past the OS system bars by default so a bottom banner isn't clipped behind the gesture/nav bar and a top banner isn't tucked under the status bar - matching what iOS already did via its safe-area guide. Android reads `WindowInsets` (`systemBars`); the per-position `offset` stacks on top. Toggle with `config('admob.banner.safe_area')` / `ADMOB_BANNER_SAFE_AREA=false` for an edge-to-edge banner. (NativePHP's own safe-area support is CSS `--inset-*` for WebView content and doesn't position a native overlay, so the plugin handles it natively.)
+
+### Changed
+
+- `offset` now means "gap *beyond* the OS safe area" rather than "from the raw screen edge" (since safe-area inset is on by default). Set `safe_area=false` for the old raw-edge behaviour.
+
 ## [0.12.0-alpha] - 2026-06-02
 
 ### Added

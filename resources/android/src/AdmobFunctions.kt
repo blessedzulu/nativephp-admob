@@ -6,6 +6,8 @@ import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdListener
@@ -132,6 +134,7 @@ object AdmobFunctions {
             val slot = parameters["slot"] as? String ?: return notImplemented("ShowBanner: slot missing")
             val position = (parameters["position"] as? String) ?: "bottom"
             val offsetDp = (parameters["offset"] as? Number)?.toInt() ?: 0
+            val safeArea = parameters["safe_area"] as? Boolean ?: true
 
             runOnUiThread {
                 val adView = BannerRegistry.get(slot) ?: run {
@@ -149,7 +152,19 @@ object AdmobFunctions {
 
                 (adView.parent as? ViewGroup)?.removeView(adView)
 
-                val offsetPx = (offsetDp * activity.resources.displayMetrics.density).toInt()
+                val decorContent = activity.findViewById<ViewGroup>(android.R.id.content)
+
+                // Inset past the OS system bars (status bar / nav-or-gesture bar)
+                // so the banner isn't clipped behind them. The configured offset
+                // stacks on top. iOS does this via its safe-area guide already.
+                val bars = if (safeArea) {
+                    ViewCompat.getRootWindowInsets(decorContent ?: activity.window.decorView)
+                        ?.getInsets(WindowInsetsCompat.Type.systemBars())
+                } else {
+                    null
+                }
+                val edgeInsetPx = if (position == "top") (bars?.top ?: 0) else (bars?.bottom ?: 0)
+                val offsetPx = (offsetDp * activity.resources.displayMetrics.density).toInt() + edgeInsetPx
 
                 val container = FrameLayout(activity)
                 val containerParams = FrameLayout.LayoutParams(
@@ -168,7 +183,6 @@ object AdmobFunctions {
                 }
                 container.addView(adView, adViewParams)
 
-                val decorContent = activity.findViewById<ViewGroup>(android.R.id.content)
                 decorContent?.addView(container, containerParams)
                 BannerRegistry.putContainer(slot, container)
 

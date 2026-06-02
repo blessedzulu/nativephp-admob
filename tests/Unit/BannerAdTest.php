@@ -42,6 +42,17 @@ it('falls back to the configured per-position offset', function () {
     $fake->assertCalled('Admob.ShowBanner', fn (array $p) => $p['offset'] === 72);
 });
 
+it('passes safe_area true by default and false when disabled', function () {
+    $fake = Admob::fake();
+    Admob::banner('footer')->show('bottom');
+    $fake->assertCalled('Admob.ShowBanner', fn (array $p) => $p['safe_area'] === true);
+
+    config(['admob.banner.safe_area' => false]);
+    $fake2 = Admob::fake();
+    Admob::banner('footer')->show('bottom');
+    $fake2->assertCalled('Admob.ShowBanner', fn (array $p) => $p['safe_area'] === false);
+});
+
 it('hides a banner', function () {
     $fake = Admob::fake();
 

@@ -133,6 +133,15 @@ return [
             'top' => (int) env('ADMOB_BANNER_OFFSET_TOP', 0),
             'bottom' => (int) env('ADMOB_BANNER_OFFSET_BOTTOM', 0),
         ],
+
+        /*
+         * Automatically inset the banner past the OS system bars (status bar at
+         * top, navigation/gesture bar at bottom) so it isn't clipped behind
+         * them. iOS already does this via the safe-area guide; this brings
+         * Android in line. The `offset` above stacks on top of this. Set false
+         * for a true edge-to-edge banner against the raw screen edge.
+         */
+        'safe_area' => (bool) env('ADMOB_BANNER_SAFE_AREA', true),
     ],
 
     /*

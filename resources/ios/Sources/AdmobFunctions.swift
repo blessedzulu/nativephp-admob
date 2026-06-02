@@ -93,6 +93,7 @@ enum AdmobFunctions {
             }
             let position = (parameters["position"] as? String) ?? "bottom"
             let offset = (parameters["offset"] as? NSNumber)?.doubleValue ?? 0
+            let safeArea = (parameters["safe_area"] as? Bool) ?? true
 
             DispatchQueue.main.async {
                 guard let bannerView = BannerRegistry.shared.get(slot: slot) else {
@@ -109,13 +110,18 @@ enum AdmobFunctions {
                 bannerView.translatesAutoresizingMaskIntoConstraints = false
                 window.addSubview(bannerView)
 
+                // safeArea=true anchors to the safe-area guide (clears the notch /
+                // home indicator); false anchors to the raw window edge.
+                let topAnchor = safeArea ? window.safeAreaLayoutGuide.topAnchor : window.topAnchor
+                let bottomAnchor = safeArea ? window.safeAreaLayoutGuide.bottomAnchor : window.bottomAnchor
+
                 NSLayoutConstraint.activate([
                     bannerView.centerXAnchor.constraint(equalTo: window.centerXAnchor),
                     bannerView.widthAnchor.constraint(equalToConstant: bannerView.adSize.size.width),
                     bannerView.heightAnchor.constraint(equalToConstant: bannerView.adSize.size.height),
                     position == "top"
-                        ? bannerView.topAnchor.constraint(equalTo: window.safeAreaLayoutGuide.topAnchor, constant: offset)
-                        : bannerView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor, constant: -offset),
+                        ? bannerView.topAnchor.constraint(equalTo: topAnchor, constant: offset)
+                        : bannerView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -offset),
                 ])
 
                 BannerRegistry.shared.putContainer(slot: slot, container: bannerView)

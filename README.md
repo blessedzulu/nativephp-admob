@@ -310,6 +310,8 @@ Drop this on any page that should show a banner. On render it loads and shows th
 
 Since the banner pins to the very top/bottom edge, it can sit on top of chrome like a native bottom-nav. Lift it off the edge with an **offset** (dp) - per call (`<x-admob::banner slot="home_footer" offset="56" />`, `<admob-banner offset="56">`, `Admob::banner('home_footer')->show('bottom', 56)`) or globally via `config('admob.banner.offset.{top,bottom}')`.
 
+By default the banner also **auto-insets past the OS system bars** (status bar at top, navigation/gesture bar at bottom) so it isn't clipped behind them - your `offset` stacks on top of that. iOS does this via its safe-area guide; Android reads `WindowInsets`. NativePHP's own safe-area support is CSS (`--inset-*`) for WebView *content* and doesn't cover this native overlay, hence the plugin handles it. Set `ADMOB_BANNER_SAFE_AREA=false` (or `config('admob.banner.safe_area')`) for a true edge-to-edge banner against the raw screen edge.
+
 **No Livewire dependency.** The teardown events are configurable, defaulting to Livewire's SPA navigation:
 
 ```php
