@@ -31,8 +31,10 @@ class TestAdUnits
 
     public const APP_OPEN_IOS = 'ca-app-pub-3940256099942544/5662855259';
 
-    // Back-compat default for callers that don't pass a platform - resolves to
-    // the Android App Open ID. Platform-aware callers should use forPlatform().
+    /*
+     * Back-compat default for callers that don't pass a platform - resolves to
+     * the Android App Open ID. Platform-aware callers should use forPlatform().
+     */
     public const APP_OPEN = self::APP_OPEN_ANDROID;
 
     public static function for(string $format): string

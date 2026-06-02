@@ -357,6 +357,18 @@ Works in Vue (hyphenated tags resolve as custom elements; mark it via `app.confi
 
 > `npm`-packaged distribution is a planned follow-up; for now publish the file as above (or import it via a `#admob` alias you define).
 
+## Built-in test page
+
+The plugin ships a generic, self-contained test/debug page so you can exercise every format + the consent flow and watch a live event log - no scaffolding needed. It's a plain HTML page (own inline styles, no Livewire/Inertia/CSRF dependency) that drives the JS API.
+
+It's served at **`/_admob/test`** whenever `config('admob.test_page')` is true - which defaults **on outside production** (like `test_mode`) and off in production. Override with `ADMOB_TEST_PAGE` / `ADMOB_TEST_ROUTE`. Boot straight into it during development:
+
+```dotenv
+NATIVEPHP_START_URL=/_admob/test
+```
+
+Buttons cover banner show/hide/flip, load/ready/show for the full-screen formats, UMP request/form/status/reset, and the iOS ATT prompt; the event log streams native events (`AdLoaded`, `ConsentChanged`, …). Intended for `test_mode`, where any slot name resolves to Google's demo ad units.
+
 ## Events
 
 | Event | Payload |

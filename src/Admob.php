@@ -151,8 +151,10 @@ class Admob
         return new RewardedInterstitialAd($this->bridge, $this, $slot, $this->resolver->resolve(RewardedInterstitialAd::FORMAT, $slot));
     }
 
-    // App Open is the only format whose test ad unit ID differs per platform,
-    // so it's the only one that pays the cost of resolving the platform.
+    /*
+     * App Open is the only format whose test ad unit ID differs per platform,
+     * so it's the only one that pays the cost of resolving the platform.
+     */
     public function appOpen(string $slot): AppOpenAd
     {
         return new AppOpenAd($this->bridge, $this, $slot, $this->resolver->resolve(AppOpenAd::FORMAT, $slot, $this->platform()));

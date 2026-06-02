@@ -24,8 +24,10 @@
  *   <admob-banner slot="home_footer" position="bottom"></admob-banner>
  */
 
-// Endpoint prefix. If you changed config('admob.js_api_prefix'), override this
-// before first use via setEndpoint('/your-prefix/call').
+/*
+ * Endpoint prefix. If you changed config('admob.js_api_prefix'), override this
+ * before first use via setEndpoint('/your-prefix/call').
+ */
 let endpoint = '/_admob/call';
 
 export function setEndpoint(url) {

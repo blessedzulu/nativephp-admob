@@ -4,7 +4,19 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
-## [0.10.0-alpha] - 2026-06-02
+## [0.11.0-alpha] - 2026-06-02
+
+### Added
+
+- **Built-in test page.** A generic, self-contained HTML page served at `/_admob/test` (config `test_page`, default on outside production; route `test_route`) that exercises every ad format + the UMP/ATT flows and streams a live native-event log. No Livewire/Inertia/CSRF dependency - works in any NativePHP app. Set `NATIVEPHP_START_URL=/_admob/test` to boot into it.
+
+### Fixed
+
+- **`<x-admob::banner>` no longer reloads on every render.** It previously called `load()->show()` as a server-render side-effect, so every Livewire re-render re-loaded the banner (and on a page that re-renders in response to `AdLoaded`, it looped continuously). The component is now fully client-driven: it loads + shows **once** on init via `/_admob/call` and hides on navigation. (Requires `js_api`, default on.)
+
+### Changed
+
+- Converted stacked single-line (`//`) comment blocks to `/* */` blocks (notably throughout `config/admob.php`), matching the package's existing docblock style.
 
 Makes the plugin usable from JavaScript (Inertia / Vue / React / vanilla), not just PHP.
 

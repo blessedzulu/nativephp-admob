@@ -55,8 +55,10 @@ class Admob extends Facade
 
         $app->instance('admob', $manager);
 
-        // Reset the static facade resolution cache so subsequent calls
-        // get the new manager.
+        /*
+         * Reset the static facade resolution cache so subsequent calls get the
+         * new manager.
+         */
         static::clearResolvedInstance('admob');
 
         return $fake;

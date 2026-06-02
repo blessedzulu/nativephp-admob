@@ -8,6 +8,7 @@ use BlessedZulu\NativePhpAdmob\Commands\SubstituteManifestPlaceholdersCommand;
 use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use BlessedZulu\NativePhpAdmob\Events\ConsentChanged;
 use BlessedZulu\NativePhpAdmob\Http\Controllers\AdmobCallController;
+use BlessedZulu\NativePhpAdmob\Http\Controllers\AdmobTestController;
 use BlessedZulu\NativePhpAdmob\Support\LoggingBridge;
 use BlessedZulu\NativePhpAdmob\Support\NativeBridge;
 use Illuminate\Support\Facades\Event;
@@ -47,8 +48,10 @@ class AdmobServiceProvider extends ServiceProvider
             __DIR__.'/../config/admob.php' => config_path('admob.php'),
         ], 'admob-config');
 
-        // Registers the `admob::` view namespace so <x-admob::banner /> resolves
-        // to resources/views/components/banner.blade.php (anonymous component).
+        /*
+         * Registers the `admob::` view namespace so <x-admob::banner /> resolves
+         * to resources/views/components/banner.blade.php (anonymous component).
+         */
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'admob');
 
         $this->publishes([
@@ -67,6 +70,17 @@ class AdmobServiceProvider extends ServiceProvider
         if ($this->app['config']->get('admob.js_api', true)) {
             Route::prefix(ltrim((string) $this->app['config']->get('admob.js_api_prefix', '_admob'), '/'))
                 ->post('call', AdmobCallController::class);
+        }
+
+        /*
+         * Built-in self-contained test/debug page. Bare route (no CSRF/session),
+         * gated on config('admob.test_page') - default on outside production.
+         */
+        if ($this->app['config']->get('admob.test_page', false)) {
+            Route::get(
+                ltrim((string) $this->app['config']->get('admob.test_route', '_admob/test'), '/'),
+                AdmobTestController::class,
+            );
         }
 
         Event::listen(ConsentChanged::class, function (ConsentChanged $event) {
