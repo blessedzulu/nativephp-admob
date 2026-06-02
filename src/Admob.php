@@ -39,6 +39,13 @@ class Admob
     protected ?bool $cachedCanRequestAds = null;
 
     /**
+     * Test/runtime override for the enabled kill-switch. Null falls back to
+     * config('admob.enabled'). Admob::fake() sets this true so call-recording
+     * tests work without extra setup.
+     */
+    protected ?bool $enabledOverride = null;
+
+    /**
      * Lazily-resolved platform ('ios'|'android'|null), cached for the process.
      * Only used to pick the right test ad unit ID where formats diverge.
      */
@@ -73,6 +80,16 @@ class Admob
             'app_id' => (string) ($this->config['app_id'] ?? ''),
             'test_devices' => $this->config['test_devices'] ?? [],
         ]);
+    }
+
+    public function enabled(): bool
+    {
+        return $this->enabledOverride ?? (bool) ($this->config['enabled'] ?? false);
+    }
+
+    public function setEnabled(bool $value): void
+    {
+        $this->enabledOverride = $value;
     }
 
     public function canRequestAds(): bool

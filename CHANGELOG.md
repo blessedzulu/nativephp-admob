@@ -4,6 +4,21 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.10.0-alpha] - 2026-06-02
+
+Makes the plugin usable from JavaScript (Inertia / Vue / React / vanilla), not just PHP.
+
+### Added
+
+- **JavaScript API.** A shipped ES module (`resources/js/admob.js`, published via `--tag=admob-js`) exposing `Admob.banner('slot').show('bottom')`, `Admob.interstitial('slot').load()/.isReady()/.show()`, `rewarded` / `rewardedInterstitial` / `appOpen`, and `Admob.ump.*` / `Admob.att.*` - plus an `Events` map and a TypeScript `.d.ts`. Every call POSTs to a thin same-origin endpoint that runs the PHP `Admob` facade, so slot resolution, the consent gate, frequency caps, and the kill-switch all apply server-side (no duplicated logic). Ad events still arrive via the runtime's `On()`.
+- **`<admob-banner slot="..." position="...">` Web Component** - a framework-agnostic mirror of `<x-admob::banner>` (Vue / React / vanilla). Connect → load + show, disconnect → hide; the element lifecycle is the teardown signal.
+- **`POST {js_api_prefix}/call`** route + `AdmobCallController` backing the JS API; toggle with `ADMOB_JS_API` (default true), prefix via `config('admob.js_api_prefix')` (default `_admob`). Requires the host to render `<meta name="csrf-token">`.
+
+### Changed
+
+- **`ADMOB_ENABLED` is now a real kill-switch.** Previously dead config; now when `false` it no-ops every ad `load()/show()/hide()` (and `isReady()` returns false) across all formats and both banner paths. Consent/ATT still run.
+- **Banner auto-hide broadened.** `<x-admob::banner>` now listens on **both `window` and `document`** (Inertia dispatches its events on `document`, which the previous `window`-only listener missed) and cleans listeners up via an `AbortController` on teardown. Default `hide_on_events` is now `['livewire:navigating', 'inertia:before', 'pagehide']`.
+
 ## [0.9.0-alpha] - 2026-06-01
 
 Polish pass before the Marketplace/v1.0 push.

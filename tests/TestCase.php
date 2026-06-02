@@ -13,4 +13,11 @@ abstract class TestCase extends Orchestra
     {
         return [AdmobServiceProvider::class];
     }
+
+    protected function getEnvironmentSetUp($app): void
+    {
+        // The JS API route runs in the `web` group (session + encryption), which
+        // needs an app key under Testbench.
+        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
+    }
 }

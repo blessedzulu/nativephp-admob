@@ -2,8 +2,10 @@
 
 return [
 
-    // Master switch. Even with this true, ads only show after consent (UMP)
-    // and tracking authorization (ATT, iOS) have been resolved.
+    // Master kill-switch. When false, ad load/show/hide all no-op across every
+    // format (and the JS API + <admob::banner> too). Consent (UMP) and tracking
+    // authorization (ATT) still run, so you can keep gathering consent while ads
+    // are toggled off. Even when true, ads only show after consent resolves.
     'enabled' => env('ADMOB_ENABLED', false),
 
     // Your AdMob app ID. Different shape to AdSense's ca-pub-XXXX:
@@ -24,6 +26,14 @@ return [
     // When true, every bridge call (method + params + response) is traced at
     // debug log level via a LoggingBridge decorator. Leave off in production.
     'debug' => env('ADMOB_DEBUG', false),
+
+    // JavaScript API. When true, the plugin registers POST {js_api_prefix}/call,
+    // a thin same-origin endpoint the shipped resources/js/admob.js module (and
+    // the <admob-banner> Web Component) call. Requests run the Admob facade, so
+    // slot resolution, the consent gate, frequency caps, and the enabled
+    // kill-switch all apply server-side. Set false to omit the route entirely.
+    'js_api' => env('ADMOB_JS_API', true),
+    'js_api_prefix' => '_admob',
 
     'consent' => [
         // EU/UK User Messaging Platform consent form. Required for serving
@@ -67,13 +77,17 @@ return [
         ],
     ],
 
-    // Banner-specific behaviour for the <x-admob::banner> component. The native
-    // banner is a screen overlay that survives WebView navigation, so the
-    // component tears it down by listening for these DOM events and calling
-    // Admob.HideBanner. Default targets Livewire SPA navigation. Override for a
-    // different router, or set to [] to disable auto-hide (call ->hide() yourself).
+    // Banner-specific behaviour for the <x-admob::banner> Blade component. The
+    // native banner is a screen overlay that survives WebView navigation, so the
+    // component tears it down by listening for these DOM events (on BOTH window
+    // and document) and calling Admob.HideBanner. Defaults cover the common
+    // runtimes: Livewire SPA nav, Inertia visits, and a full-page-unload
+    // fallback. Auto-hide needs SOME navigation event from your host app -
+    // override this list for a different router, or set [] to disable and call
+    // ->hide() yourself. Inertia/Vue/React SPAs should prefer the JS API +
+    // component lifecycle (the <admob-banner> Web Component) instead.
     'banner' => [
-        'hide_on_events' => ['livewire:navigating'],
+        'hide_on_events' => ['livewire:navigating', 'inertia:before', 'pagehide'],
     ],
 
     // Per-format show throttling for the full-screen formats (interstitial,

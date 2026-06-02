@@ -51,6 +51,7 @@ class Admob extends Facade
             $app['cache']->store($config['frequency_store'] ?? null),
         );
         $manager->setCanRequestAds(true);
+        $manager->setEnabled(true);
 
         $app->instance('admob', $manager);
 

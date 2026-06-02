@@ -7,9 +7,11 @@ namespace BlessedZulu\NativePhpAdmob;
 use BlessedZulu\NativePhpAdmob\Commands\SubstituteManifestPlaceholdersCommand;
 use BlessedZulu\NativePhpAdmob\Contracts\Bridge;
 use BlessedZulu\NativePhpAdmob\Events\ConsentChanged;
+use BlessedZulu\NativePhpAdmob\Http\Controllers\AdmobCallController;
 use BlessedZulu\NativePhpAdmob\Support\LoggingBridge;
 use BlessedZulu\NativePhpAdmob\Support\NativeBridge;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AdmobServiceProvider extends ServiceProvider
@@ -52,6 +54,21 @@ class AdmobServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/admob'),
         ], 'admob-views');
+
+        // Ship the JS module + types so JS apps can pull them into their build.
+        $this->publishes([
+            __DIR__.'/../resources/js' => resource_path('js/vendor/admob'),
+        ], 'admob-js');
+
+        // Thin same-origin endpoint backing the JS API. Runs the Admob facade,
+        // so slot resolution + consent + caps + the enabled kill-switch apply.
+        if ($this->app['config']->get('admob.js_api', true)) {
+            Route::middleware('web')
+                ->prefix(ltrim((string) $this->app['config']->get('admob.js_api_prefix', '_admob'), '/'))
+                ->group(function () {
+                    Route::post('call', AdmobCallController::class);
+                });
+        }
 
         Event::listen(ConsentChanged::class, function (ConsentChanged $event) {
             $this->app->make('admob')->onConsentChanged($event->status);

@@ -45,6 +45,8 @@ ADMOB_ENABLED=true
 ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
 ```
 
+`ADMOB_ENABLED` is a real kill-switch: when `false`, every ad `load()` / `show()` / `hide()` no-ops across all formats (and the Blade/JS banner + JS API). Consent (UMP) and tracking (ATT) still run, so you can keep gathering consent while ads are toggled off.
+
 The plugin's manifest takes care of writing this into the right places on each platform:
 
 - **Android**: injected into `AndroidManifest.xml` as the `com.google.android.gms.ads.APPLICATION_ID` `<meta-data>` entry.
@@ -311,15 +313,49 @@ Drop this on any page that should show a banner. On render it loads and shows th
 ```php
 // config/admob.php
 'banner' => [
-    'hide_on_events' => ['livewire:navigating'], // override for a different router, or [] to disable
+    // Listens on BOTH window and document for each event, cleaned up on teardown.
+    'hide_on_events' => ['livewire:navigating', 'inertia:before', 'pagehide'],
 ],
 ```
 
-If your app doesn't navigate via Livewire, point `hide_on_events` at whatever your router emits, or set it to `[]` and call `Admob::banner($slot)->hide()` yourself. Notes: one native overlay exists per slot; sharing a slot across pages is safe; don't mount two different positions for the same slot at once (last wins).
+Auto-hide needs *some* navigation event from your host app: Livewire dispatches `livewire:navigating` on `window`, Inertia dispatches `inertia:*` on `document`, and `pagehide` covers full-page unloads. Override the list for a different router, or set `[]` to disable and call `Admob::banner($slot)->hide()` yourself. Notes: one native overlay per slot; sharing a slot across pages is safe; don't mount two different positions for the same slot at once (last wins). **Inertia/Vue/React apps should use the JS API + `<admob-banner>` Web Component below instead** - its connect/disconnect lifecycle drives show/hide with no event guessing.
 
-## JavaScript Usage
+## JavaScript API (Inertia / Vue / React / vanilla)
 
-The banner component tears its overlay down from JavaScript via NativePHP's bridge endpoint (`POST /_native/api/call` with `{ "method": "Admob.HideBanner", "params": { "slot": "..." } }`). You can call any bridge method the same way - no Livewire required - which is how the no-dependency teardown works.
+The plugin ships a JS module so you can drive ads from JavaScript without Livewire or Blade. Publish it into your app and import it:
+
+```bash
+php artisan vendor:publish --tag=admob-js   # -> resources/js/vendor/admob/admob.js (+ .d.ts)
+```
+
+```js
+import { Admob, Events } from './vendor/admob/admob.js';
+import { On } from '@nativephp/mobile'; // your NativePHP runtime import
+
+On(Events.UserEarnedReward, ({ slot, amount }) => grant(slot, amount));
+
+await Admob.interstitial('level_complete').load();
+if (await Admob.interstitial('level_complete').isReady()) {
+    await Admob.interstitial('level_complete').show();
+}
+
+// Consent / tracking
+await Admob.ump.requestInfo();
+if (!(await Admob.ump.canRequestAds())) await Admob.ump.showForm();
+await Admob.att.request(); // iOS only
+```
+
+**Banner — `<admob-banner>` Web Component** (framework-agnostic mirror of `<x-admob::banner>`):
+
+```html
+<admob-banner slot="home_footer" position="bottom"></admob-banner>
+```
+
+Works in Vue (hyphenated tags resolve as custom elements; mark it via `app.config.compilerOptions.isCustomElement = t => t === 'admob-banner'`), React 19+ (native custom-element support), and vanilla. The element's own lifecycle is the teardown signal: connect → load + show, disconnect → hide - no navigation-event wiring. For manual control use `Admob.banner('home_footer').show('bottom')` / `.hide()` (e.g. in `onMounted` / `onBeforeUnmount`).
+
+**How it works.** Every JS call POSTs to a thin same-origin endpoint (`/_admob/call`) that runs the PHP `Admob` facade, so slot resolution, the consent gate, frequency caps, and the `ADMOB_ENABLED` kill-switch all apply server-side - the JS layer duplicates none of it. Ad events still arrive in JS via the runtime's `On()`. Toggle the endpoint off with `ADMOB_JS_API=false`; change its prefix with `config('admob.js_api_prefix')`.
+
+> Your host page must render `<meta name="csrf-token" content="...">` (the same requirement as the NativePHP runtime) or `/_admob/call` returns 419. `npm`-packaged distribution is a planned follow-up; for now publish the file as above (or import it via a `#admob` alias you define).
 
 ## Events
 

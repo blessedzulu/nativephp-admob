@@ -37,6 +37,16 @@ abstract class AdBuilder
      */
     protected function dispatch(string $method, array $extra = []): array
     {
+        if (! $this->manager->enabled()) {
+            Log::debug('Admob: disabled, skipping bridge call.', [
+                'method' => $method,
+                'slot' => $this->slot,
+                'format' => $this->format(),
+            ]);
+
+            return ['success' => false, 'data' => null, 'error' => 'admob_disabled'];
+        }
+
         $response = $this->bridge->call($method, $this->params($extra));
 
         if (($response['success'] ?? false) !== true) {
