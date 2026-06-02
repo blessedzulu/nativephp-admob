@@ -4,6 +4,12 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [0.13.1-alpha] - 2026-06-02
+
+### Changed
+
+- **Built-in test page polish.** The full-screen formats' **Show** buttons now start disabled/muted and only turn green + enable once an ad is actually loaded - they track `AdLoaded` / `AdDismissed` / `AdFailedToShow` / `AdFailedToLoad` (and the `Ready?` check) instead of always looking ready ("Show (load first)" until loaded). The clear-log button is repositioned with balanced top/right spacing.
+
 ## [0.13.0-alpha] - 2026-06-02
 
 ### Added

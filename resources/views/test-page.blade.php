@@ -34,6 +34,7 @@
         button:active { transform: translateY(1px); }
         button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
         button.ghost { background: transparent; }
+        button:disabled { opacity: .4; cursor: not-allowed; }
         .pill { font-size: 12px; color: var(--muted); margin-left: auto; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
@@ -45,7 +46,7 @@
         #log .l { white-space: pre-wrap; word-break: break-word; }
         #log .ev { color: var(--accent); }
         #log .err { color: var(--danger); }
-        .clearlog { position: fixed; right: 12px; bottom: 96px; z-index: 2; padding: 5px 9px; font-size: 11px; }
+        .clearlog { position: fixed; right: 10px; bottom: 89px; z-index: 2; padding: 5px 9px; font-size: 11px; line-height: 1; }
     </style>
 </head>
 <body>
@@ -98,7 +99,7 @@
             <div class="grid" style="margin-top:8px">
                 <button onclick="ad('{{ $fmt }}','load')">Load</button>
                 <button onclick="ready('{{ $fmt }}')">Ready?</button>
-                <button class="primary" style="grid-column:1/-1" onclick="ad('{{ $fmt }}','show')">Show</button>
+                <button id="show-{{ $fmt }}" disabled style="grid-column:1/-1" onclick="ad('{{ $fmt }}','show')">Show (load first)</button>
             </div>
         </div>
     @endforeach
@@ -167,9 +168,19 @@
             call({ kind: 'ad', format: 'banner', slot, action: 'hide' });
             call({ kind: 'ad', format: 'banner', slot, action: 'show', position, offset: bannerOffset() });
         }
+        // Reflect a full-screen format's readiness on its Show button: green +
+        // enabled when an ad is loaded, muted + disabled when it isn't.
+        function setReady(format, isReady) {
+            const btn = document.getElementById('show-' + format);
+            if (!btn) return;
+            btn.disabled = !isReady;
+            btn.classList.toggle('primary', isReady);
+            btn.textContent = isReady ? 'Show' : 'Show (load first)';
+        }
         async function ready(format) {
             const r = await call({ kind: 'ad', format, slot: slotOf(format), action: 'isReady' });
             log('   ' + format + ' ready = ' + (r.ready === true));
+            setReady(format, r.ready === true);
         }
 
         function ump(action) { return call({ kind: 'ump', action }); }
@@ -186,9 +197,18 @@
         // Live event stream from native (AdLoaded, AdShown, ConsentChanged, ...).
         window.addEventListener('native-event', (e) => {
             const name = (e.detail?.event || '').split('\\').pop();
-            log('🔔 ' + name + '  ' + JSON.stringify(e.detail?.payload ?? {}), 'ev');
-            if (name === 'ConsentChanged' && e.detail?.payload?.status) {
-                document.getElementById('ump-pill').textContent = 'consent: ' + e.detail.payload.status;
+            const payload = e.detail?.payload ?? {};
+            log('🔔 ' + name + '  ' + JSON.stringify(payload), 'ev');
+
+            if (name === 'ConsentChanged' && payload.status) {
+                document.getElementById('ump-pill').textContent = 'consent: ' + payload.status;
+            }
+
+            // Keep each full-screen Show button in sync with load state.
+            const fmt = payload.format;
+            if (fmt && fmt !== 'banner') {
+                if (name === 'AdLoaded') setReady(fmt, true);
+                if (name === 'AdDismissed' || name === 'AdFailedToShow' || name === 'AdFailedToLoad') setReady(fmt, false);
             }
         });
 
