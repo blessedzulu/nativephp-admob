@@ -62,12 +62,11 @@ class AdmobServiceProvider extends ServiceProvider
 
         // Thin same-origin endpoint backing the JS API. Runs the Admob facade,
         // so slot resolution + consent + caps + the enabled kill-switch apply.
+        // No CSRF/session middleware - it's a localhost native-WebView endpoint,
+        // mirroring NativePHP's own /_native/api/call (which is likewise exempt).
         if ($this->app['config']->get('admob.js_api', true)) {
-            Route::middleware('web')
-                ->prefix(ltrim((string) $this->app['config']->get('admob.js_api_prefix', '_admob'), '/'))
-                ->group(function () {
-                    Route::post('call', AdmobCallController::class);
-                });
+            Route::prefix(ltrim((string) $this->app['config']->get('admob.js_api_prefix', '_admob'), '/'))
+                ->post('call', AdmobCallController::class);
         }
 
         Event::listen(ConsentChanged::class, function (ConsentChanged $event) {

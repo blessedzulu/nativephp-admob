@@ -7,11 +7,9 @@ declare(strict_types=1);
 
 use BlessedZulu\NativePhpAdmob\Events\AdShowThrottled;
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
-    $this->withoutMiddleware(VerifyCsrfToken::class);
     config(['admob.test_mode' => true]);
 });
 

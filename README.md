@@ -353,9 +353,9 @@ await Admob.att.request(); // iOS only
 
 Works in Vue (hyphenated tags resolve as custom elements; mark it via `app.config.compilerOptions.isCustomElement = t => t === 'admob-banner'`), React 19+ (native custom-element support), and vanilla. The element's own lifecycle is the teardown signal: connect → load + show, disconnect → hide - no navigation-event wiring. For manual control use `Admob.banner('home_footer').show('bottom')` / `.hide()` (e.g. in `onMounted` / `onBeforeUnmount`).
 
-**How it works.** Every JS call POSTs to a thin same-origin endpoint (`/_admob/call`) that runs the PHP `Admob` facade, so slot resolution, the consent gate, frequency caps, and the `ADMOB_ENABLED` kill-switch all apply server-side - the JS layer duplicates none of it. Ad events still arrive in JS via the runtime's `On()`. Toggle the endpoint off with `ADMOB_JS_API=false`; change its prefix with `config('admob.js_api_prefix')`.
+**How it works.** Every JS call POSTs to a thin same-origin endpoint (`/_admob/call`) that runs the PHP `Admob` facade, so slot resolution, the consent gate, frequency caps, and the `ADMOB_ENABLED` kill-switch all apply server-side - the JS layer duplicates none of it. Ad events still arrive in JS via the runtime's `On()`. The endpoint is CSRF-exempt and session-less, exactly like NativePHP's own `/_native/api/call` - it only exists inside the localhost native WebView. Toggle it off with `ADMOB_JS_API=false`; change its prefix with `config('admob.js_api_prefix')`.
 
-> Your host page must render `<meta name="csrf-token" content="...">` (the same requirement as the NativePHP runtime) or `/_admob/call` returns 419. `npm`-packaged distribution is a planned follow-up; for now publish the file as above (or import it via a `#admob` alias you define).
+> `npm`-packaged distribution is a planned follow-up; for now publish the file as above (or import it via a `#admob` alias you define).
 
 ## Events
 
