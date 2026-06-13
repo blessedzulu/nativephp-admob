@@ -229,8 +229,16 @@
     },
     "secrets": {
         "ADMOB_APP_ID": {
-            "description": "Your AdMob app ID (format: ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY). Get it at apps.admob.com under App Settings.",
-            "required": true
+            "description": "AdMob app ID (ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY) from apps.admob.com. Single-platform apps can set just this. For separate Android + iOS apps set ADMOB_APP_ID_ANDROID and ADMOB_APP_ID_IOS instead - they override per build. The app ID is validated per-platform at compile time (the substitute-placeholders hook fails the build if the target platform's app ID is missing), so this key is not required globally.",
+            "required": false
+        },
+        "ADMOB_APP_ID_ANDROID": {
+            "description": "Android AdMob app ID (ca-app-pub-XXXX~YYYY). Used for Android builds; falls back to ADMOB_APP_ID.",
+            "required": false
+        },
+        "ADMOB_APP_ID_IOS": {
+            "description": "iOS AdMob app ID (ca-app-pub-XXXX~YYYY). Used for iOS builds; falls back to ADMOB_APP_ID.",
+            "required": false
         }
     }
 }

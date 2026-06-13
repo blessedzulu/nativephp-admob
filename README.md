@@ -39,7 +39,7 @@ php artisan native:run                                          # rebuild
 
 ### Required: AdMob app ID
 
-The plugin's manifest declares `ADMOB_APP_ID` as a required secret. Set it in your `.env` before running `native:run` or the build will fail with a clear error:
+Set your AdMob app ID in `.env` before running `native:run`. The app ID is validated **per platform** at compile time, so the build fails with a clear error if the app ID for the platform you're building is missing:
 
 ```dotenv
 ADMOB_ENABLED=true
