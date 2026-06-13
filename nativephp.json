@@ -2,11 +2,6 @@
     "namespace": "Admob",
     "bridge_functions": [
         {
-            "name": "Admob.Start",
-            "ios": "AdmobFunctions.Start",
-            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.Start"
-        },
-        {
             "name": "Admob.Platform",
             "ios": "AdmobFunctions.Platform",
             "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.Platform"

@@ -310,9 +310,11 @@ Register the `warm_resume` slot in `config/admob.php` (see [Where ad units are c
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
 
-// One-time boot - idempotent. Initialises the SDK, requests UMP consent,
-// shows the ATT prompt on iOS.
-Admob::start();
+// The Mobile Ads SDK boots automatically at app start (the plugin's
+// init_function) - there is no start() call to make. Request UMP consent
+// (EEA/UK) and, on iOS, the ATT prompt once early in your app's lifecycle:
+Admob::ump()->requestConsentInfo();      // then ->showFormIfRequired()
+Admob::att()->requestAuthorization();    // iOS only; no-ops elsewhere
 
 // Banner
 Admob::banner('calculator_bottom')->load()->show('bottom');
@@ -458,14 +460,18 @@ ADMOB_ATT_ENABLED=false
 
 ### Testing the consent form
 
-The UMP consent form only appears for users in the EEA + UK. To force it during development on a device anywhere, set a debug geography and register your device as a UMP test device:
+The UMP consent form only appears for users in the EEA + UK. To exercise it during development on a device anywhere, either:
 
-```dotenv
-ADMOB_UMP_DEBUG_GEOGRAPHY=EEA
-ADMOB_TEST_DEVICES=<UMP-hashed-device-id>
-```
+- **Use a VPN** to a EEA region (e.g. Germany) and relaunch - this drives the real form, no extra config; or
+- **Force a debug geography** by registering your device as a test device in the AdMob console (Settings -> Test devices, by raw advertising ID) and setting:
 
-The UMP-hashed device ID is printed to logcat / the Xcode console on the first `requestConsentInfo()` call on an unconfigured device (it is **not** the same value as the Mobile Ads test-device ID). Copy it from the log into `ADMOB_TEST_DEVICES` and relaunch. Set `ADMOB_UMP_DEBUG_GEOGRAPHY=DISABLED` (the default) for production.
+  ```dotenv
+  ADMOB_UMP_DEBUG_GEOGRAPHY=EEA
+  ```
+
+Set `ADMOB_UMP_DEBUG_GEOGRAPHY=DISABLED` (the default) for production.
+
+> Test devices are managed entirely in the AdMob console - the plugin bakes in no device IDs (a baked-in ID goes stale the moment a device resets its advertising ID). The same console registration makes both real ads serve as test ads **and** the UMP debug geography take effect.
 
 You are responsible for following Google's [AdMob policies](https://support.google.com/admob/answer/6128543) and Apple's [App Tracking Transparency requirements](https://developer.apple.com/app-store/user-privacy-and-data-use/).
 

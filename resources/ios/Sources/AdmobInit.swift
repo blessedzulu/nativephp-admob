@@ -9,22 +9,14 @@ import GoogleMobileAds
  * Uses the modern v13+ async start() API. The Task wrapper means we don't
  * block the main thread waiting for adapter initialisation - the SDK
  * dispatches its own internal events as adapters come online.
+ *
+ * Test devices are managed in the AdMob console (Settings -> Test devices)
+ * by raw advertising ID - one source of truth, no baked-in IDs to go stale.
  */
 enum AdmobInit {
     static func initialize() {
         Task {
             _ = await MobileAds.shared.start()
-        }
-
-        if let raw = ProcessInfo.processInfo.environment["ADMOB_TEST_DEVICES"] {
-            let ids = raw
-                .split(separator: ",")
-                .map { String($0).trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-
-            if !ids.isEmpty {
-                MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ids
-            }
         }
 
         BannerLifecycle.register()

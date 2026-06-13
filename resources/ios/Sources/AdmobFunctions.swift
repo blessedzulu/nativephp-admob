@@ -156,21 +156,6 @@ enum AdmobFunctions {
         }
     }
 
-    class Start: BridgeFunction {
-        func execute(parameters: [String: Any]) throws -> [String: Any] {
-            // SDK init happens in AdmobInit; Start applies the PHP-config-driven
-            // RequestConfiguration - notably test device IDs, passed reliably as a
-            // bridge param (config('admob.test_devices')) rather than via env.
-            let testDevices = (parameters["test_devices"] as? [Any])?
-                .compactMap { $0 as? String }
-                .filter { !$0.isEmpty } ?? []
-            if !testDevices.isEmpty {
-                MobileAds.shared.requestConfiguration.testDeviceIdentifiers = testDevices
-            }
-            return AdmobFunctions.success(["started": true, "test_devices": testDevices.count])
-        }
-    }
-
     // Toggle the app-open auto-show (e.g. while a user holds an ad-free pass).
     class SetAppOpenSuppressed: BridgeFunction {
         func execute(parameters: [String: Any]) throws -> [String: Any] {

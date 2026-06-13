@@ -26,21 +26,16 @@ enum ConsentManager {
     }
 
     /**
-     * Builds DebugSettings from env so the form can be triggered during testing.
-     * ADMOB_UMP_DEBUG_GEOGRAPHY is one of EEA / NOT_EEA / DISABLED.
-     * ADMOB_TEST_DEVICES is a comma-separated list of UMP hashed device IDs
-     * (printed to the Xcode console on the first info-update on an unconfigured
-     * device - NOT the MobileAds test-device ID).
+     * Builds DebugSettings from env so the consent form's geography can be
+     * forced during testing. ADMOB_UMP_DEBUG_GEOGRAPHY is one of
+     * EEA / NOT_EEA / DISABLED. (Test devices are managed in the AdMob console,
+     * not here; or simply use a VPN to a EEA region to exercise the real form.)
      */
     private static func debugSettings() -> DebugSettings? {
         let env = ProcessInfo.processInfo.environment
         let geography = env["ADMOB_UMP_DEBUG_GEOGRAPHY"]?.trimmingCharacters(in: .whitespaces).uppercased()
-        let devices = (env["ADMOB_TEST_DEVICES"] ?? "")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
 
-        if (geography == nil || geography == "" || geography == "DISABLED") && devices.isEmpty {
+        if geography == nil || geography == "" || geography == "DISABLED" {
             return nil
         }
 
@@ -49,9 +44,6 @@ enum ConsentManager {
         case "EEA": settings.geography = .EEA
         case "NOT_EEA", "NON_EEA": settings.geography = .notEEA
         default: settings.geography = .disabled
-        }
-        if !devices.isEmpty {
-            settings.testDeviceIdentifiers = devices
         }
 
         return settings

@@ -2,7 +2,6 @@ package com.blessedzulu.nativephp.admob
 
 import android.content.Context
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
 
 /**
  * Boots the Google Mobile Ads SDK once at app startup. Registered as the
@@ -10,26 +9,15 @@ import com.google.android.gms.ads.RequestConfiguration
  * function becomes available.
  *
  * The completion callback is intentionally empty - the SDK already logs
- * adapter initialisation status to logcat. If a consumer needs the status,
- * they listen for the ConsentChanged Laravel event after Admob::start().
+ * adapter initialisation status to logcat.
+ *
+ * Test devices are managed in the AdMob console (Settings -> Test devices)
+ * by raw advertising ID - one source of truth, no baked-in IDs to go stale.
  */
 object AdmobInit {
     @JvmStatic
     fun initialize(context: Context) {
         MobileAds.initialize(context) { /* status callback - logged by SDK */ }
-
-        System.getenv("ADMOB_TEST_DEVICES")
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotBlank() }
-            ?.takeIf { it.isNotEmpty() }
-            ?.let { testIds ->
-                MobileAds.setRequestConfiguration(
-                    RequestConfiguration.Builder()
-                        .setTestDeviceIds(testIds)
-                        .build()
-                )
-            }
 
         BannerLifecycle.register()
         AppOpenLifecycle.register()

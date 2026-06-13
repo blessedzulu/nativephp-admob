@@ -214,34 +214,6 @@ object AdmobFunctions {
             success(mapOf("platform" to "android"))
     }
 
-    class Start(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
-            // The SDK itself is initialised by AdmobInit (the init_function). Start
-            // applies the runtime RequestConfiguration that depends on PHP config -
-            // notably the test device IDs, which arrive here as a reliable bridge
-            // param (config('admob.test_devices')) rather than via System.getenv,
-            // which is not populated in the native process. The bridge builds the
-            // params map with JSONObject.get(), so an array arrives as a JSONArray
-            // (not a Kotlin List) - handle both, plus a comma-string fallback.
-            val testDevices: List<String> = when (val raw = parameters["test_devices"]) {
-                is org.json.JSONArray -> (0 until raw.length()).map { raw.optString(it) }
-                is List<*> -> raw.mapNotNull { it as? String }
-                is String -> raw.split(",")
-                else -> emptyList()
-            }.map { it.trim() }.filter { it.isNotBlank() }
-
-            if (testDevices.isNotEmpty()) {
-                com.google.android.gms.ads.MobileAds.setRequestConfiguration(
-                    com.google.android.gms.ads.RequestConfiguration.Builder()
-                        .setTestDeviceIds(testDevices)
-                        .build()
-                )
-            }
-
-            return success(mapOf("started" to true, "test_devices" to testDevices.size))
-        }
-    }
-
     // Toggle the app-open auto-show observer. Hosts call this to suppress the
     // app-open ad while a user has, e.g., a temporary ad-free pass - the native
     // AppOpenLifecycle auto-shows on foreground outside any per-request gate, so

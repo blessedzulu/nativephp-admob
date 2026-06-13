@@ -33,21 +33,16 @@ object ConsentManager {
     }
 
     /**
-     * Builds ConsentDebugSettings from env so the form can be triggered during
-     * testing. ADMOB_UMP_DEBUG_GEOGRAPHY is one of EEA / NOT_EEA / DISABLED.
-     * ADMOB_TEST_DEVICES is a comma-separated list of UMP hashed device IDs
-     * (the value the UMP SDK prints to logcat on the first info-update on an
-     * unconfigured device - NOT the MobileAds test-device ID).
+     * Builds ConsentDebugSettings from env so the consent form's geography can
+     * be forced during testing. ADMOB_UMP_DEBUG_GEOGRAPHY is one of
+     * EEA / NOT_EEA / DISABLED. (Test devices are managed in the AdMob console,
+     * not here; the UMP debug geography honours a registered console test device
+     * or simply use a VPN to a EEA region to exercise the real form.)
      */
     private fun buildDebugSettings(context: Context): ConsentDebugSettings? {
         val geography = System.getenv("ADMOB_UMP_DEBUG_GEOGRAPHY")?.trim()?.uppercase()
-        val devices = System.getenv("ADMOB_TEST_DEVICES")
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotBlank() }
-            ?: emptyList()
 
-        if ((geography.isNullOrBlank() || geography == "DISABLED") && devices.isEmpty()) {
+        if (geography.isNullOrBlank() || geography == "DISABLED") {
             return null
         }
 
@@ -57,7 +52,6 @@ object ConsentManager {
             "NOT_EEA", "NON_EEA" -> builder.setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_NOT_EEA)
             else -> { /* leave default geography */ }
         }
-        devices.forEach { builder.addTestDeviceHashedId(it) }
 
         return builder.build()
     }

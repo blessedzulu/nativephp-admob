@@ -34,11 +34,11 @@ return [
     'test_mode' => env('ADMOB_TEST_MODE', env('APP_ENV', 'production') !== 'production'),
 
     /*
-     * Comma-separated device IDs that should always receive test ads, even when
-     * test_mode is false. Find your device ID by running once with
-     * test_mode=true and looking at the device log.
+     * Test devices are managed in the AdMob console (Settings -> Test devices)
+     * by raw advertising ID - one source of truth, no baked-in IDs that go stale
+     * when a device resets its advertising ID. Test ads never count as real
+     * impressions or clicks, so registering your dev devices there is safe.
      */
-    'test_devices' => array_values(array_filter(array_map('trim', explode(',', (string) env('ADMOB_TEST_DEVICES', ''))))),
 
     /*
      * When true, every bridge call (method + params + response) is traced at
@@ -84,8 +84,9 @@ return [
         /*
          * UMP debug geography for testing the consent form outside the EEA. One
          * of EEA, NOT_EEA, DISABLED. The native layer reads
-         * ADMOB_UMP_DEBUG_GEOGRAPHY directly from the process env (like
-         * ADMOB_TEST_DEVICES); this key exists for discoverability and parity.
+         * ADMOB_UMP_DEBUG_GEOGRAPHY directly from the process env; this key
+         * exists for discoverability and parity. (Or just use a VPN to a EEA
+         * region to exercise the real consent form on any device.)
          */
         'ump_debug_geography' => env('ADMOB_UMP_DEBUG_GEOGRAPHY', 'DISABLED'),
     ],

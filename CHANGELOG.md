@@ -4,6 +4,32 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.0-beta] - 2026-06-13
+
+### Removed
+
+- **In-app test-device support, entirely.** Test devices are now managed solely in the AdMob console (Settings -> Test devices, by raw advertising ID) - the single source of truth. A baked-in device ID goes stale the moment a device resets its advertising ID, which made the in-app path unreliable. Removed: the `ADMOB_TEST_DEVICES` env read from `AdmobInit` (Android + iOS) and from `ConsentManager`'s UMP debug settings, plus the `admob.test_devices` config key.
+- **`Admob::start()` and the `Admob.Start` bridge function.** These existed only to push the test-device `RequestConfiguration` into the SDK at runtime; with that gone they had no purpose (the SDK is initialised by the `init_function`, consent by `Admob::ump()->requestConsentInfo()`). **Breaking:** remove any `Admob::start()` call - it is no longer needed.
+
+## [1.2.1-beta] - 2026-06-13
+
+### Fixed
+
+- **Android test-device parsing.** The bridge builds its params map with `JSONObject.get()`, so an array arrives as `org.json.JSONArray`, not a Kotlin `List` - `Admob.Start` now handles `JSONArray`, `List`, and a comma-string fallback. (Superseded by 1.3.0-beta, which removes the path entirely.)
+
+## [1.2.0-beta] - 2026-06-13
+
+### Added
+
+- **`Admob::setAppOpenSuppressed(bool)`** + the `Admob.SetAppOpenSuppressed` bridge function. The native `AppOpenLifecycle` auto-shows the app-open ad on foreground outside any per-request gate; hosts can now tell it to stand down (e.g. while a user holds a temporary ad-free pass). Android + iOS.
+
+## [1.1.0-beta] - 2026-06-13
+
+### Added
+
+- **Platform-aware slot + app-id resolution.** Slots and the app ID are now per-platform - each is a `['android' => ..., 'ios' => ...]` array and the plugin resolves the running platform via `Admob::adUnit()` / `Admob::appId()`. Both platforms use explicit `ADMOB_<SLOT>_ANDROID` / `ADMOB_<SLOT>_IOS` env keys (no canonical platform).
+- **Per-platform manifest / Info.plist app-id substitution** at build time, with a build failure if the running platform's `ADMOB_APP_ID_<PLATFORM>` is unset (the app-id secrets are `required: false` so the platform-blind core validator doesn't fail the other platform's build).
+
 ## [1.0.0-beta] - 2026-06-02
 
 First beta. The plugin is feature-complete and the public API (facade, slots, config, JS API, Blade/Web components, events) is considered stable.

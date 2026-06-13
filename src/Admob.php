@@ -73,16 +73,6 @@ class Admob
         );
     }
 
-    public function start(): void
-    {
-        $this->bridge->call('Admob.Start', [
-            'ump_enabled' => (bool) ($this->config['consent']['ump_enabled'] ?? true),
-            'att_enabled' => (bool) ($this->config['consent']['att_enabled'] ?? true),
-            'app_id' => $this->appId(),
-            'test_devices' => $this->config['test_devices'] ?? [],
-        ]);
-    }
-
     public function enabled(): bool
     {
         return $this->enabledOverride ?? (bool) ($this->config['enabled'] ?? false);
