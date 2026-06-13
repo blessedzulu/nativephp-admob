@@ -11,9 +11,18 @@ return [
     'enabled' => env('ADMOB_ENABLED', false),
 
     /*
-     * Your AdMob app ID. Different shape to AdSense's ca-pub-XXXX: AdMob uses
-     * ca-app-pub-XXXX~YYYY. One per platform if you maintain separate iOS /
-     * Android apps; set the active one in .env per build.
+     * Your AdMob app ID (ca-app-pub-XXXX~YYYY). The app ID is per-platform, so a
+     * cross-platform app sets a platform-keyed array and the running platform is
+     * picked automatically:
+     *
+     *   'app_id' => [
+     *       'android' => env('ADMOB_APP_ID_ANDROID'),
+     *       'ios'     => env('ADMOB_APP_ID_IOS'),
+     *   ],
+     *
+     * A plain string is used as-is (universal / single-platform). The build-time
+     * manifest substitution reads ADMOB_APP_ID_ANDROID / ADMOB_APP_ID_IOS (then a
+     * universal ADMOB_APP_ID fallback) to fill the manifest + Info.plist per build.
      */
     'app_id' => env('ADMOB_APP_ID', ''),
 
@@ -86,8 +95,18 @@ return [
      * etc. Slots are entirely app-defined: you choose the names and where their
      * ad unit IDs come from. The package has NO env-key convention - the
      * env(...) calls below are illustrative only. Slots are resolved solely from
-     * config('admob.slots.{format}.{name}'); each value is the AdMob ad unit ID
-     * for that placement (ca-app-pub-XXXX/YYYY). Defaults are empty.
+     * config('admob.slots.{format}.{name}').
+     *
+     * Each slot value is either a plain ad unit ID string (ca-app-pub-XXXX/YYYY,
+     * universal / single-platform) OR a platform-keyed array for cross-platform
+     * apps, where the running platform is selected automatically:
+     *
+     *   'home_footer' => [
+     *       'android' => env('ADMOB_BANNER_HOME_FOOTER_ANDROID'),
+     *       'ios'     => env('ADMOB_BANNER_HOME_FOOTER_IOS'),
+     *   ],
+     *
+     * Defaults are empty.
      */
     'slots' => [
         'banner' => [

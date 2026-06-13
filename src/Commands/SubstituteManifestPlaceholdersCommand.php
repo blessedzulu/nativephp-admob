@@ -24,21 +24,29 @@ class SubstituteManifestPlaceholdersCommand extends NativePluginHookCommand
 
     public function handle(): int
     {
-        $appId = env('ADMOB_APP_ID');
-        if (empty($appId)) {
-            $this->warn('Admob: ADMOB_APP_ID not set; skipping manifest placeholder substitution.');
-
-            return self::SUCCESS;
-        }
-
+        // The app ID is per-platform. Each build targets one platform, so read
+        // that platform's key (ADMOB_APP_ID_ANDROID / ADMOB_APP_ID_IOS), falling
+        // back to a universal ADMOB_APP_ID for single-platform apps.
         if ($this->isAndroid()) {
-            $manifest = $this->buildPath().'/app/src/main/AndroidManifest.xml';
-            $this->substituteInFile($manifest, '${ADMOB_APP_ID}', $appId, 'AndroidManifest.xml');
+            $appId = env('ADMOB_APP_ID_ANDROID', env('ADMOB_APP_ID'));
+
+            if (empty($appId)) {
+                $this->warn('Admob: no Android app ID (ADMOB_APP_ID_ANDROID / ADMOB_APP_ID); skipping AndroidManifest substitution.');
+            } else {
+                $manifest = $this->buildPath().'/app/src/main/AndroidManifest.xml';
+                $this->substituteInFile($manifest, '${ADMOB_APP_ID}', $appId, 'AndroidManifest.xml');
+            }
         }
 
         if ($this->isIos()) {
-            foreach (glob($this->buildPath().'/*/Info.plist') ?: [] as $path) {
-                $this->substituteInFile($path, '${ADMOB_APP_ID}', $appId, basename($path));
+            $appId = env('ADMOB_APP_ID_IOS', env('ADMOB_APP_ID'));
+
+            if (empty($appId)) {
+                $this->warn('Admob: no iOS app ID (ADMOB_APP_ID_IOS / ADMOB_APP_ID); skipping Info.plist substitution.');
+            } else {
+                foreach (glob($this->buildPath().'/*/Info.plist') ?: [] as $path) {
+                    $this->substituteInFile($path, '${ADMOB_APP_ID}', $appId, basename($path));
+                }
             }
         }
 

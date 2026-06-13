@@ -51,3 +51,25 @@ it('returns the right test ID for every format', function () {
         ->and($resolver->resolve('rewarded_interstitial', 'x'))->toBe(TestAdUnits::REWARDED_INTERSTITIAL)
         ->and($resolver->resolve('app_open', 'x'))->toBe(TestAdUnits::APP_OPEN);
 });
+
+it('resolves a platform-keyed slot to the matching platform unit', function () {
+    $resolver = new SlotResolver([
+        'test_mode' => false,
+        'slots' => ['banner' => ['footer' => [
+            'android' => 'ca-app-pub-A/A',
+            'ios' => 'ca-app-pub-I/I',
+        ]]],
+    ]);
+
+    expect($resolver->resolve('banner', 'footer', 'ios'))->toBe('ca-app-pub-I/I')
+        ->and($resolver->resolve('banner', 'footer', 'android'))->toBe('ca-app-pub-A/A');
+});
+
+it('throws for a platform-keyed slot missing the running platform', function () {
+    $resolver = new SlotResolver([
+        'test_mode' => false,
+        'slots' => ['banner' => ['footer' => ['android' => 'ca-app-pub-A/A']]],
+    ]);
+
+    $resolver->resolve('banner', 'footer', 'ios');
+})->throws(UnknownSlotException::class);

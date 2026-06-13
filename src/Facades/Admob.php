@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static \BlessedZulu\NativePhpAdmob\Builders\RewardedAd rewarded(string $slot)
  * @method static \BlessedZulu\NativePhpAdmob\Builders\RewardedInterstitialAd rewardedInterstitial(string $slot)
  * @method static \BlessedZulu\NativePhpAdmob\Builders\AppOpenAd appOpen(string $slot)
+ * @method static ?string adUnit(string $format, string $slot)
+ * @method static bool hasSlot(string $format, string $slot)
  * @method static \BlessedZulu\NativePhpAdmob\Consent\Ump ump()
  * @method static \BlessedZulu\NativePhpAdmob\Consent\Att att()
  */

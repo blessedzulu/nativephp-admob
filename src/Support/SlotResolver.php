@@ -21,6 +21,13 @@ class SlotResolver
 
         $unit = $this->config['slots'][$format][$slot] ?? null;
 
+        // Slots are platform-keyed: ['android' => '...', 'ios' => '...']. Pick the
+        // running platform. A plain string is treated as a universal unit (handy
+        // for single-platform apps); arrays are the cross-platform shape.
+        if (is_array($unit)) {
+            $unit = $unit[$platform] ?? null;
+        }
+
         if (! is_string($unit) || $unit === '') {
             throw new UnknownSlotException(
                 "Slot [{$slot}] is not configured for format [{$format}]. ".
