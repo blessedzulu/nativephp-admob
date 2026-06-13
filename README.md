@@ -282,6 +282,14 @@ public function onDismissed(string $slot, string $format): void
 - **4-hour staleness.** Ads older than 4h are silently discarded on foreground. The plugin does NOT auto-load a replacement (consumer drives that via `#[OnNative(AdDismissed::class)]` or a periodic re-load).
 - **One-shot per show.** Same as interstitial/rewarded: dismissal clears the registry slot; call `load()` again before the next show.
 
+**Suppressing the auto-show.** Because app-open presents on foreground *outside* any per-request gate, a normal "don't load new ads" check can't stop an already-loaded one. To stand the auto-show down (e.g. while a user holds a temporary ad-free pass), call:
+
+```php
+Admob::setAppOpenSuppressed(true);  // false to restore
+```
+
+The flag lives in the native layer and resets on app restart, so re-sync it at boot (e.g. `Admob::setAppOpenSuppressed($user->hasAdFreePass())`).
+
 **Manual override** when the auto-show flow doesn't fit (e.g. you want to gate on a feature-flag or an in-app purchase state):
 
 ```php

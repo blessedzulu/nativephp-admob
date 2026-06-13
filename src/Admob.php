@@ -190,6 +190,18 @@ class Admob
     }
 
     /**
+     * Suppress (or re-enable) the native app-open auto-show. App-open ads present
+     * themselves on foreground outside any per-request gate, so call this with
+     * true while the user should see no ads (e.g. a temporary ad-free pass) and
+     * false to restore. The flag lives in the native layer and resets on app
+     * restart, so re-sync it at boot.
+     */
+    public function setAppOpenSuppressed(bool $suppressed): void
+    {
+        $this->bridge->call('Admob.SetAppOpenSuppressed', ['suppressed' => $suppressed]);
+    }
+
+    /**
      * The ad unit ID that would be used right now for a slot - the test unit in
      * test mode, otherwise the platform-resolved configured unit - or null if the
      * slot isn't configured. Non-throwing, so callers can gate UI on "is this set

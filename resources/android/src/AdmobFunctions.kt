@@ -214,10 +214,41 @@ object AdmobFunctions {
             success(mapOf("platform" to "android"))
     }
 
-    // ---------- Stubs: land in later phases ----------
-
     class Start(private val activity: FragmentActivity) : BridgeFunction {
-        override fun execute(parameters: Map<String, Any>): Map<String, Any> = notImplemented("Admob.Start")
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            // The SDK itself is initialised by AdmobInit (the init_function). Start
+            // applies the runtime RequestConfiguration that depends on PHP config -
+            // notably the test device IDs, which arrive here as a reliable bridge
+            // param (config('admob.test_devices')) rather than via System.getenv,
+            // which is not populated in the native process.
+            @Suppress("UNCHECKED_CAST")
+            val testDevices = (parameters["test_devices"] as? List<*>)
+                ?.mapNotNull { it as? String }
+                ?.filter { it.isNotBlank() }
+                ?: emptyList()
+
+            if (testDevices.isNotEmpty()) {
+                com.google.android.gms.ads.MobileAds.setRequestConfiguration(
+                    com.google.android.gms.ads.RequestConfiguration.Builder()
+                        .setTestDeviceIds(testDevices)
+                        .build()
+                )
+            }
+
+            return success(mapOf("started" to true, "test_devices" to testDevices.size))
+        }
+    }
+
+    // Toggle the app-open auto-show observer. Hosts call this to suppress the
+    // app-open ad while a user has, e.g., a temporary ad-free pass - the native
+    // AppOpenLifecycle auto-shows on foreground outside any per-request gate, so
+    // it must be told to stand down.
+    class SetAppOpenSuppressed(private val activity: FragmentActivity) : BridgeFunction {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val suppressed = parameters["suppressed"] as? Boolean ?: false
+            AppOpenLifecycle.autoShowSuppressed = suppressed
+            return success(mapOf("suppressed" to suppressed))
+        }
     }
 
     class LoadInterstitial(private val activity: FragmentActivity) : BridgeFunction {

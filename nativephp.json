@@ -87,6 +87,11 @@
             "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.ShowAppOpen"
         },
         {
+            "name": "Admob.SetAppOpenSuppressed",
+            "ios": "AdmobFunctions.SetAppOpenSuppressed",
+            "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.SetAppOpenSuppressed"
+        },
+        {
             "name": "Admob.UmpRequestInfo",
             "ios": "AdmobFunctions.UmpRequestInfo",
             "android": "com.blessedzulu.nativephp.admob.AdmobFunctions.UmpRequestInfo"

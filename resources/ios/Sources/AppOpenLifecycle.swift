@@ -17,6 +17,9 @@ enum AppOpenLifecycle {
     // didBecomeActive has already fired by then. Same reasoning as Android -
     // default to "consumed" so the first observed foreground triggers auto-show.
     private static var coldStartConsumed = true
+    // Host-controlled kill-switch for the auto-show (set true while a user holds
+    // an ad-free pass). Resets on process restart; the host re-syncs at boot.
+    static var autoShowSuppressed = false
 
     static func register() {
         guard !registered else { return }
@@ -31,6 +34,7 @@ enum AppOpenLifecycle {
                 coldStartConsumed = true
                 return
             }
+            if autoShowSuppressed { return }
             if FullScreenAdState.recentlyDismissed() {
                 // Another full-screen ad just dismissed - suppress to avoid back-to-back presentations.
                 return

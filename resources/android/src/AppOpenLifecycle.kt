@@ -33,6 +33,13 @@ object AppOpenLifecycle {
 
     private const val EVENT_BASE = "BlessedZulu\\NativePhpAdmob\\Events"
 
+    // Host-controlled kill-switch for the auto-show. Set true to stand down (e.g.
+    // while the user holds a temporary ad-free pass) - the auto-show fires outside
+    // any per-request gate, so it must be told to. Defaults false and resets on
+    // process restart, so the host re-syncs it at boot.
+    @JvmStatic
+    var autoShowSuppressed = false
+
     @JvmStatic
     fun bindActivity(activity: FragmentActivity) {
         activityRef = WeakReference(activity)
@@ -48,6 +55,10 @@ object AppOpenLifecycle {
             Log.i("AppOpenLifecycle", "onResume callback fired (coldStartConsumed=$coldStartConsumed, slots=${AppOpenRegistry.allSlots().size}, activity=${activityRef?.get() != null}, recentlyDismissed=${FullScreenAdState.recentlyDismissed()})")
             if (!coldStartConsumed) {
                 coldStartConsumed = true
+                return@on
+            }
+            if (autoShowSuppressed) {
+                Log.i("AppOpenLifecycle", "suppressing auto-show: disabled by host (e.g. ad-free pass)")
                 return@on
             }
             if (FullScreenAdState.recentlyDismissed()) {

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \BlessedZulu\NativePhpAdmob\Builders\AppOpenAd appOpen(string $slot)
  * @method static ?string adUnit(string $format, string $slot)
  * @method static bool hasSlot(string $format, string $slot)
+ * @method static void setAppOpenSuppressed(bool $suppressed)
  * @method static \BlessedZulu\NativePhpAdmob\Consent\Ump ump()
  * @method static \BlessedZulu\NativePhpAdmob\Consent\Att att()
  */
