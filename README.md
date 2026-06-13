@@ -2,13 +2,14 @@
 
 Google AdMob plugin for [NativePHP Mobile](https://nativephp.com). Banner, interstitial, rewarded, rewarded interstitial, and app-open ads, with built-in UMP consent and iOS App Tracking Transparency.
 
-> Status: 1.0.0-beta. Feature-complete and API-stable; all five ad formats plus UMP + ATT, the JS API, and the `<admob-banner>` Web Component are implemented and **Android device-verified**. **iOS is implemented but not yet tested on hardware** - treat it as beta and please report issues at the [issue tracker](https://github.com/blessedzulu/nativephp-admob/issues).
+> Status: 1.1.0-beta. Feature-complete and API-stable; all five ad formats plus UMP + ATT, the JS API, and the `<admob-banner>` Web Component are implemented and **Android device-verified**, with **platform-aware (per-Android/iOS) ad unit and app ID resolution**. **iOS is implemented but not yet tested on hardware** - treat it as beta and please report issues at the [issue tracker](https://github.com/blessedzulu/nativephp-admob/issues).
 
 ## Features
 
 - Five ad formats: banner, interstitial, rewarded, rewarded interstitial, app open
 - Fluent, slot-based API: `Admob::interstitial('level_complete')->load()->show()`
 - Config-driven slot names - no raw `ca-app-pub-...` IDs in app code, no env-key convention
+- Platform-aware ad units - per-Android/iOS unit IDs and app ID, resolved automatically
 - `<x-admob::banner>` Blade component (no Livewire dependency)
 - Per-format / per-slot frequency caps
 - UMP (User Messaging Platform) consent flow baked in
@@ -54,6 +55,13 @@ The plugin's manifest takes care of writing this into the right places on each p
 
 You do not need to edit either of those files yourself.
 
+For separate Android + iOS apps, set the app ID per platform - each build reads `ADMOB_APP_ID_ANDROID` / `ADMOB_APP_ID_IOS` for its target, falling back to a universal `ADMOB_APP_ID`:
+
+```dotenv
+ADMOB_APP_ID_ANDROID=ca-app-pub-XXXXXXXXXXXXXXXX~AAAAAAAAAA
+ADMOB_APP_ID_IOS=ca-app-pub-XXXXXXXXXXXXXXXX~IIIIIIIIII
+```
+
 ### Where ad units are configured
 
 Ad units live under named **slots** in `config/admob.php` - never as raw IDs in your app code. A slot is just a name you pick (`home_footer`, `level_complete`, ...) mapped to the AdMob ad unit ID for that placement.
@@ -80,6 +88,36 @@ php artisan vendor:publish --tag=admob-config
 ```
 
 Outside `production`, `test_mode` is on and these IDs are ignored in favour of Google's reserved test IDs, so you cannot accidentally serve a real ad in development.
+
+### Platform-specific ad units (Android & iOS)
+
+AdMob ad units and app IDs are **per platform** - Android and iOS are separate apps in AdMob, and a unit belongs to one of them. Give any slot (or the app ID) a platform-keyed array and the plugin resolves the running platform automatically:
+
+```php
+// config/admob.php
+'app_id' => [
+    'android' => env('ADMOB_APP_ID_ANDROID'),
+    'ios'     => env('ADMOB_APP_ID_IOS'),
+],
+
+'slots' => [
+    'banner' => [
+        'home_footer' => [
+            'android' => env('ADMOB_BANNER_HOME_ANDROID'),
+            'ios'     => env('ADMOB_BANNER_HOME_IOS'),
+        ],
+    ],
+],
+```
+
+A plain string is still valid - treated as a **universal** value for single-platform apps (`'home_footer' => env('ADMOB_BANNER_HOME')`). Resolution is lazy: the platform is only queried (a cached native call) when a slot is actually platform-keyed, so string slots cost nothing extra.
+
+Need the resolved unit yourself - e.g. to gate UI on "is this configured?" Both helpers are non-throwing and platform + test-mode aware:
+
+```php
+Admob::adUnit('banner', 'home_footer');   // ?string - the unit that would be used now, or null
+Admob::hasSlot('rewarded', 'extra_life'); // bool
+```
 
 ### Displaying each format
 
