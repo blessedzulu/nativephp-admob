@@ -220,12 +220,15 @@ object AdmobFunctions {
             // applies the runtime RequestConfiguration that depends on PHP config -
             // notably the test device IDs, which arrive here as a reliable bridge
             // param (config('admob.test_devices')) rather than via System.getenv,
-            // which is not populated in the native process.
-            @Suppress("UNCHECKED_CAST")
-            val testDevices = (parameters["test_devices"] as? List<*>)
-                ?.mapNotNull { it as? String }
-                ?.filter { it.isNotBlank() }
-                ?: emptyList()
+            // which is not populated in the native process. The bridge builds the
+            // params map with JSONObject.get(), so an array arrives as a JSONArray
+            // (not a Kotlin List) - handle both, plus a comma-string fallback.
+            val testDevices: List<String> = when (val raw = parameters["test_devices"]) {
+                is org.json.JSONArray -> (0 until raw.length()).map { raw.optString(it) }
+                is List<*> -> raw.mapNotNull { it as? String }
+                is String -> raw.split(",")
+                else -> emptyList()
+            }.map { it.trim() }.filter { it.isNotBlank() }
 
             if (testDevices.isNotEmpty()) {
                 com.google.android.gms.ads.MobileAds.setRequestConfiguration(
