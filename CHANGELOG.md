@@ -4,6 +4,13 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-07-06
+
+First stable release. The beta suffix is dropped now that all five ad formats
+plus UMP and ATT have been exercised on iOS (Xcode 26, iOS 26.5 Simulator) in
+addition to the existing Android device verification. No code changes since
+1.3.2-beta - this promotes that tested build to stable.
+
 ## [1.3.2-beta] - 2026-07-06
 
 First real iOS-hardware/simulator compile of the plugin - shakes out issues the iOS code had never been built against.
