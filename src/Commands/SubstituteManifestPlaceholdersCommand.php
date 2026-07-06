@@ -51,10 +51,71 @@ class SubstituteManifestPlaceholdersCommand extends NativePluginHookCommand
 
             foreach (glob($this->buildPath().'/*/Info.plist') ?: [] as $path) {
                 $this->substituteInFile($path, '${ADMOB_APP_ID}', $appId, basename($path));
+                $this->injectSKAdNetworkItems($path, basename($path));
             }
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Inject the SKAdNetworkItems array (array-of-dicts) into the iOS Info.plist.
+     *
+     * This is done here, at post_compile, rather than via the plugin's
+     * declarative `info_plist` block because NativePHP's IOSPluginCompiler only
+     * serialises flat arrays of <string> values - it TypeErrors on an array of
+     * <dict> entries (which SKAdNetworkItems requires per Apple's spec). Emitting
+     * the XML directly against the final Info.plist sidesteps that limitation.
+     *
+     * Idempotent: skips if the key is already present.
+     */
+    protected function injectSKAdNetworkItems(string $path, string $label): void
+    {
+        if (! file_exists($path)) {
+            return;
+        }
+
+        $content = file_get_contents($path);
+        if (! is_string($content) || str_contains($content, '<key>SKAdNetworkItems</key>')) {
+            return;
+        }
+
+        $idsFile = dirname(__DIR__, 2).'/resources/skadnetwork-ids.json';
+        if (! file_exists($idsFile)) {
+            return;
+        }
+
+        $ids = json_decode((string) file_get_contents($idsFile), true);
+        if (! is_array($ids) || $ids === []) {
+            return;
+        }
+
+        $dicts = '';
+        foreach ($ids as $id) {
+            if (! is_string($id) || $id === '') {
+                continue;
+            }
+            $safe = htmlspecialchars($id, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+            $dicts .= "\n\t\t<dict>\n\t\t\t<key>SKAdNetworkIdentifier</key>\n\t\t\t<string>{$safe}</string>\n\t\t</dict>";
+        }
+
+        $entry = "\n\t<key>SKAdNetworkItems</key>\n\t<array>{$dicts}\n\t</array>";
+
+        $new = preg_replace(
+            '/(\s*<\/dict>\s*<\/plist>)/s',
+            $entry.'$1',
+            $content,
+            1
+        );
+
+        if (! is_string($new) || $new === $content) {
+            $this->warn("Admob: could not inject SKAdNetworkItems into {$label} (no </dict></plist> anchor).");
+
+            return;
+        }
+
+        file_put_contents($path, $new);
+        $this->info('Admob: injected '.count($ids)." SKAdNetworkItems into {$label}");
     }
 
     protected function substituteInFile(string $path, string $needle, string $value, string $label): void

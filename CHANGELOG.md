@@ -4,6 +4,12 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.1-beta] - 2026-07-06
+
+### Fixed
+
+- **iOS build crash from `SKAdNetworkItems`.** NativePHP's `IOSPluginCompiler` only serialises flat arrays of `<string>` values and throws a `TypeError` ("Argument #1 ($value) must be of type string, array given") on an array of `<dict>` entries - which `SKAdNetworkItems` requires per Apple's spec, so iOS builds failed at the "Compiling plugin" step. The SKAdNetwork identifier list has moved out of the declarative `info_plist` block into `resources/skadnetwork-ids.json` and is now injected as correct plist XML by the existing `post_compile` hook (idempotent, iOS-only). No consumer action needed.
+
 ## [1.3.0-beta] - 2026-06-13
 
 ### Removed
