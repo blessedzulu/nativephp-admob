@@ -6,18 +6,19 @@ import UserMessagingPlatform
  * (so the consent form can be forced during testing) and the consentStatus ->
  * PHP-string mapping aligned with ConsentChanged::STATUS_* on the Laravel side.
  *
- * NOTE: GoogleUserMessagingPlatform ~> 2.7 exposes Swift-refined, de-prefixed
- * type names (ConsentInformation / ConsentForm / RequestParameters /
- * DebugSettings / DebugGeography / ConsentStatus), matching how this repo
- * already uses the de-prefixed Google Mobile Ads names (BannerView, Request,
- * AppOpenAd). If the pinned pod resolves only the UMP-prefixed ObjC names,
- * switch these to UMPConsentInformation.sharedInstance etc.
+ * NOTE: GoogleUserMessagingPlatform ~> 2.7 exposes the UMP-prefixed ObjC type
+ * names to Swift (UMPConsentInformation / UMPConsentForm / UMPRequestParameters
+ * / UMPDebugSettings / UMPDebugGeography / UMPConsentStatus), and the singleton
+ * is `.sharedInstance` (not `.shared`). Verified against a real compile
+ * (Xcode 26, iOS Simulator) 2026-07-06. The enum cases (.EEA / .notEEA /
+ * .disabled, .notRequired / .required / .obtained) import de-prefixed and are
+ * resolved from their property/parameter type, so they need no UMP prefix.
  */
 enum ConsentManager {
-    static var info: ConsentInformation { ConsentInformation.shared }
+    static var info: UMPConsentInformation { UMPConsentInformation.sharedInstance }
 
-    static func requestParameters() -> RequestParameters {
-        let params = RequestParameters()
+    static func requestParameters() -> UMPRequestParameters {
+        let params = UMPRequestParameters()
         if let debug = debugSettings() {
             params.debugSettings = debug
         }
@@ -31,7 +32,7 @@ enum ConsentManager {
      * EEA / NOT_EEA / DISABLED. (Test devices are managed in the AdMob console,
      * not here; or simply use a VPN to a EEA region to exercise the real form.)
      */
-    private static func debugSettings() -> DebugSettings? {
+    private static func debugSettings() -> UMPDebugSettings? {
         let env = ProcessInfo.processInfo.environment
         let geography = env["ADMOB_UMP_DEBUG_GEOGRAPHY"]?.trimmingCharacters(in: .whitespaces).uppercased()
 
@@ -39,7 +40,7 @@ enum ConsentManager {
             return nil
         }
 
-        let settings = DebugSettings()
+        let settings = UMPDebugSettings()
         switch geography {
         case "EEA": settings.geography = .EEA
         case "NOT_EEA", "NON_EEA": settings.geography = .notEEA

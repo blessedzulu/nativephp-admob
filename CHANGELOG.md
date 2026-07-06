@@ -4,6 +4,20 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.2-beta] - 2026-07-06
+
+First real iOS-hardware/simulator compile of the plugin - shakes out issues the iOS code had never been built against.
+
+### Fixed
+
+- **iOS Swift compile: UMP symbol names.** `ConsentManager` used the de-prefixed UMP type names (`ConsentInformation`, `RequestParameters`, `DebugSettings`) and `.shared`; GoogleUserMessagingPlatform ~> 2.7 actually exports the UMP-prefixed ObjC names (`UMPConsentInformation`, `UMPRequestParameters`, `UMPDebugSettings`) with the singleton at `.sharedInstance`. Also `ConsentForm` -> `UMPConsentForm` in `AdmobFunctions`. Verified against a real compile (Xcode 26, iOS Simulator).
+- **iOS Swift compile: cross-file access levels.** `AdmobFunctions`' `rootViewController()`, `keyWindow()`, `success()` and `notImplemented()` were `private` but are called from sibling files (`AppOpenLifecycle` etc.); Swift `private` blocks cross-file access, so the build failed with "inaccessible due to 'private' protection level". Widened to `internal`.
+- **iOS launch crash: unsubstituted `${ADMOB_APP_ID}` on the simulator build.** The `${ADMOB_APP_ID}` Info.plist substitution hook only globbed `<build>/*/Info.plist` (the device target), missing the simulator target's `<App>-simulator-Info.plist` at the build root. Xcode then expanded the untouched `${ADMOB_APP_ID}` to an empty string and the GMA SDK aborted on launch (`GADApplicationVerifyPublisherInitializedCorrectly`). The hook now covers both plist locations.
+
+### Changed
+
+- **Test page (`/_admob/test`) clears a native EDGE bottom-nav.** The fixed event log and its controls now add the platform tab-bar height (iOS 49px / Android 72px) on top of the safe-area inset, so they aren't hidden behind a host app's native bottom navigation.
+
 ## [1.3.1-beta] - 2026-07-06
 
 ### Fixed

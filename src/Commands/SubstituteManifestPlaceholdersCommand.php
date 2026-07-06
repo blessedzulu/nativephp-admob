@@ -49,7 +49,19 @@ class SubstituteManifestPlaceholdersCommand extends NativePluginHookCommand
                 return self::FAILURE;
             }
 
-            foreach (glob($this->buildPath().'/*/Info.plist') ?: [] as $path) {
+            // NativePHP uses a separate Info.plist per target: the DEVICE target's
+            // lives one directory deep (e.g. NativePHP/Info.plist) while the
+            // SIMULATOR target's sits at the build root as
+            // "<App>-simulator-Info.plist". Cover both globs - if the simulator
+            // plist is missed, its ${ADMOB_APP_ID} is never replaced, Xcode
+            // expands the unknown ${...} to an empty string, and the GMA SDK
+            // aborts on launch (GADApplicationVerifyPublisherInitializedCorrectly).
+            $plists = array_values(array_unique(array_merge(
+                glob($this->buildPath().'/*/Info.plist') ?: [],
+                glob($this->buildPath().'/*Info.plist') ?: [],
+            )));
+
+            foreach ($plists as $path) {
                 $this->substituteInFile($path, '${ADMOB_APP_ID}', $appId, basename($path));
                 $this->injectSKAdNetworkItems($path, basename($path));
             }

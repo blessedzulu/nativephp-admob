@@ -1,3 +1,15 @@
+@php
+    // Clear a native EDGE bottom-nav if the host app renders one: it overlays the
+    // bottom of the WebView, and NativePHP's safe-area inset covers ONLY the
+    // home-indicator (~34pt on iOS), not the nav bar. Add the standard tab-bar
+    // height per platform so the fixed event log isn't hidden behind it. 0 when
+    // not mobile (no native nav to clear).
+    $edgeNavInset = match (config('nativephp-internal.platform')) {
+        'ios' => '49px',
+        'android' => '72px',
+        default => '0px',
+    };
+@endphp
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -9,12 +21,13 @@
             --bg: #09090b; --card: #18181b; --card-2: #27272a; --line: #27272a;
             --text: #fafafa; --muted: #a1a1aa; --accent: #10b981; --accent-ink: #03130d;
             --danger: #ef4444; --radius: 14px;
+            --edge-nav: {{ $edgeNavInset }};
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; background: var(--bg); color: var(--text);
             font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
-            padding: max(16px, env(safe-area-inset-top)) 16px calc(120px + env(safe-area-inset-bottom));
+            padding: max(16px, env(safe-area-inset-top)) 16px calc(120px + var(--edge-nav) + env(safe-area-inset-bottom));
             -webkit-font-smoothing: antialiased;
         }
         h1 { font-size: 20px; margin: 4px 0 2px; letter-spacing: -0.02em; }
@@ -39,14 +52,14 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
         #log {
-            position: fixed; left: 0; right: 0; bottom: 0; height: 120px; overflow-y: auto;
-            background: #000; border-top: 1px solid var(--line); padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+            position: fixed; left: 0; right: 0; bottom: calc(var(--edge-nav) + env(safe-area-inset-bottom)); height: 120px; overflow-y: auto;
+            background: #000; border-top: 1px solid var(--line); padding: 8px 12px;
             font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: #d4d4d8;
         }
         #log .l { white-space: pre-wrap; word-break: break-word; }
         #log .ev { color: var(--accent); }
         #log .err { color: var(--danger); }
-        .clearlog { position: fixed; right: 10px; bottom: 89px; z-index: 2; padding: 5px 9px; font-size: 11px; line-height: 1; }
+        .clearlog { position: fixed; right: 10px; bottom: calc(89px + var(--edge-nav) + env(safe-area-inset-bottom)); z-index: 2; padding: 5px 9px; font-size: 11px; line-height: 1; }
     </style>
 </head>
 <body>

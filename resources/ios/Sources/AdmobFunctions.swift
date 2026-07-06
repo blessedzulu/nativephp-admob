@@ -26,21 +26,21 @@ enum AdmobFunctions {
 
     private static let eventBase = "BlessedZulu\\NativePhpAdmob\\Events"
 
-    private static func notImplemented(_ name: String) -> [String: Any] {
+    static func notImplemented(_ name: String) -> [String: Any] {
         return ["success": false, "data": NSNull(), "error": "\(name) not implemented in v0.4.x."]
     }
 
-    private static func success(_ data: Any? = nil) -> [String: Any] {
+    static func success(_ data: Any? = nil) -> [String: Any] {
         return ["success": true, "data": data ?? NSNull(), "error": NSNull()]
     }
 
-    private static func keyWindow() -> UIWindow? {
+    static func keyWindow() -> UIWindow? {
         let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let active = windowScenes.first { $0.activationState == .foregroundActive } ?? windowScenes.first
         return active?.windows.first(where: { $0.isKeyWindow }) ?? active?.windows.first
     }
 
-    private static func rootViewController() -> UIViewController? {
+    static func rootViewController() -> UIViewController? {
         return keyWindow()?.rootViewController
     }
 
@@ -487,7 +487,7 @@ enum AdmobFunctions {
                 if ConsentManager.isFormRequired() {
                     AdmobFunctions.dispatch("ConsentFormShown", [:])
                 }
-                ConsentForm.loadAndPresentIfRequired(from: root) { error in
+                UMPConsentForm.loadAndPresentIfRequired(from: root) { error in
                     if let error = error {
                         NSLog("UMP loadAndPresentIfRequired error: \(error.localizedDescription)")
                     }
