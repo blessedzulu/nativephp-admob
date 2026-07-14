@@ -14,7 +14,7 @@ await ad.load();
 await ad.show();
 ```
 
-> Status: 1.1.0-beta. Feature-complete and API-stable; all five ad formats plus UMP + ATT, the JS API, and the `<admob-banner>` Web Component are implemented and **Android device-verified**, with **platform-aware (per-Android/iOS) ad unit and app ID resolution**. **iOS is implemented but not yet tested on hardware** - treat it as beta and please report issues at the [issue tracker](https://github.com/blessedzulu/nativephp-admob/issues).
+> **Stable.** All five ad formats, UMP consent, iOS App Tracking Transparency, the JavaScript API, and the `<admob-banner>` Web Component are implemented and verified on real Android and iOS hardware, with platform-aware (per-Android/iOS) ad unit and app ID resolution. Found a bug? Open an issue on the [tracker](https://github.com/blessedzulu/nativephp-admob/issues).
 
 ## Features
 
@@ -147,7 +147,7 @@ The plugin ships a starter list of SKAdNetwork identifiers in its iOS Info.plist
 
 ## PHP Usage
 
-### Banner ads (available since v0.4.0-alpha — Android device-tested, iOS untested on hardware)
+### Banner ads
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
@@ -163,11 +163,11 @@ Admob::banner('home_footer')->hide();
 
 Register the `home_footer` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)). Or skip the manual calls entirely and use the [Blade component](#blade), which loads, shows, and tears the banner down for you.
 
-The banner uses Google's **adaptive banner** sizing — the SDK picks the right height for the device. Width is full screen width. Banners are attached to the activity's root view (Android) or key window (iOS) as an overlay, so they don't shift your existing layout.
+The banner uses Google's **adaptive banner** sizing - the SDK picks the right height for the device. Width is full screen width. Banners are attached to the activity's root view (Android) or key window (iOS) as an overlay, so they don't shift your existing layout.
 
 Test mode is automatic outside `production`. Real ad unit IDs are silently swapped for Google's reserved test IDs, so you can never accidentally show a real ad during development.
 
-### Interstitial ads (available since v0.5.0-alpha — Android device-tested, iOS untested on hardware)
+### Interstitial ads
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
@@ -205,7 +205,7 @@ Register the `between_calculations` slot in `config/admob.php` (see [Where ad un
 
 Events dispatched for the interstitial lifecycle: `AdLoaded`, `AdFailedToLoad`, `AdShown`, `AdFailedToShow`, `AdImpression`, `AdClicked`, `AdDismissed`. Listen with `#[OnNative(EventClass::class)]` on any Livewire component.
 
-### Rewarded ads (available since v0.6.0-alpha — Android device-tested, iOS untested on hardware)
+### Rewarded ads
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
@@ -250,7 +250,7 @@ The `UserEarnedReward` event fires ONLY if the user watches to the rewardable th
 
 Register the `export_pdf` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)).
 
-### Rewarded interstitial ads (available since v0.6.0-alpha)
+### Rewarded interstitial ads
 
 Same API surface as rewarded, but the ad **auto-plays on entry** with a 5-second skip warning rather than an opt-in "Watch ad" tap. Useful between level transitions where you want to reward continuation without requiring an explicit tap.
 
@@ -264,7 +264,7 @@ if (Admob::rewardedInterstitial('between_levels')->isReady()) {
 
 `UserEarnedReward` event payload includes `format: 'rewarded_interstitial'` so a single listener can branch.
 
-### App Open ads (available since v0.7.0-alpha — Android device-tested, iOS untested on hardware)
+### App Open ads
 
 App Open ads are the format Google designed for the brief moment between app foreground and your splash/home screen. The plugin's recommended path is **auto-show**: call `load()` once on app start; the native lifecycle observer presents the cached ad on every subsequent foreground (skipping the cold-start resume), and discards anything older than 4 hours.
 
@@ -315,9 +315,9 @@ if (Admob::appOpen('paywall_dismissed')->isReady()) {
 
 Register the `warm_resume` slot in `config/admob.php` (see [Where ad units are configured](#where-ad-units-are-configured)).
 
-### Other formats
+### Quick reference
 
-> _All five formats now ship - Banner / Interstitial / Rewarded / Rewarded Interstitial / App Open._
+A single snippet covering SDK boot, consent, and one call per format:
 
 ```php
 use BlessedZulu\NativePhpAdmob\Facades\Admob;
@@ -409,7 +409,7 @@ if (!(await Admob.ump.canRequestAds())) await Admob.ump.showForm();
 await Admob.att.request(); // iOS only
 ```
 
-**Banner — `<admob-banner>` Web Component** (framework-agnostic mirror of `<x-admob::banner>`):
+**Banner - `<admob-banner>` Web Component** (framework-agnostic mirror of `<x-admob::banner>`):
 
 ```html
 <admob-banner slot="home_footer" position="bottom"></admob-banner>

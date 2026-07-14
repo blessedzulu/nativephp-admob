@@ -36,12 +36,9 @@ import org.json.JSONObject
  * NativePHP's AndroidPluginCompiler emits `ClassName(activity)` when
  * `params` is omitted from the manifest entry (the default).
  *
- * Phase 3 ships real implementations for the three banner functions
- * (LoadBanner / ShowBanner / HideBanner). Every other function still
- * returns a "not implemented" error - those land in Phases 4-8.
- *
- * `Platform` is the one always-real exception so PHP-side `Att` can
- * short-circuit on Android without round-tripping a fake error.
+ * Implements the full AdMob surface - banner, interstitial, rewarded,
+ * rewarded interstitial, and app-open ads, plus UMP consent. Verified on
+ * real Android hardware.
  */
 object AdmobFunctions {
     private const val TAG = "AdmobFunctions"
@@ -49,7 +46,7 @@ object AdmobFunctions {
     private const val EVENT_BASE = "BlessedZulu\\NativePhpAdmob\\Events"
 
     private fun notImplemented(name: String): Map<String, Any> =
-        mapOf("success" to false, "error" to "$name not implemented in v0.4.x.")
+        mapOf("success" to false, "error" to "$name not implemented.")
 
     private fun success(data: Any? = null): Map<String, Any> {
         val result = mutableMapOf<String, Any>("success" to true)

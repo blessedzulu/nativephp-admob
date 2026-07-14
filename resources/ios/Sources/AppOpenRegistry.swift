@@ -7,7 +7,7 @@ import GoogleMobileAds
 /// Google strongly recommends discarding app-open ads older than 4 hours;
 /// `isFresh(slot:)` enforces this.
 ///
-/// The delegate map exists for the same retention reason as Phase 4's
+/// The delegate map exists for the same retention reason as the
 /// InterstitialRegistry - `FullScreenContentDelegate` is weakly held by the
 /// SDK, so the registry must strongly retain it until dismissal.
 final class AppOpenRegistry {

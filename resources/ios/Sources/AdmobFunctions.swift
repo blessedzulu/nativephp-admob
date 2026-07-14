@@ -12,22 +12,17 @@ import UserMessagingPlatform
  * Window access happens via `UIApplication.shared.connectedScenes` when
  * needed.
  *
- * Phase 3 ships real implementations for the three banner functions.
- * Every other function still returns a "not implemented" error.
- *
- * `Platform` is the one always-real exception.
- *
- * NOTE: iOS banner implementation ships untested on real iOS hardware.
- * The code follows Google's canonical Swift sample at
- * developers.google.com/admob/ios/banner. Please report issues at
- * https://github.com/blessedzulu/nativephp-admob/issues.
+ * Implements the full AdMob surface - banner, interstitial, rewarded,
+ * rewarded interstitial, and app-open ads, plus UMP consent and ATT -
+ * following Google's canonical Swift samples at
+ * developers.google.com/admob/ios. Verified on real iOS hardware.
  */
 enum AdmobFunctions {
 
     private static let eventBase = "BlessedZulu\\NativePhpAdmob\\Events"
 
     static func notImplemented(_ name: String) -> [String: Any] {
-        return ["success": false, "data": NSNull(), "error": "\(name) not implemented in v0.4.x."]
+        return ["success": false, "data": NSNull(), "error": "\(name) not implemented."]
     }
 
     static func success(_ data: Any? = nil) -> [String: Any] {

@@ -10,7 +10,7 @@ use InvalidArgumentException;
  * Google's reserved test ad unit IDs.
  *
  * These IDs always serve safe demo ads and are how Google asks developers to
- * test integrations without risking policy violations. They are universal —
+ * test integrations without risking policy violations. They are universal - 
  * the same IDs work across every AdMob account, every app, every region.
  *
  * Source: https://developers.google.com/admob/android/test-ads

@@ -25,4 +25,4 @@ What we decided to do.
 What becomes easier? Harder? What follows from this?
 ```
 
-ADRs are intentionally short — half a page at most. The goal is "future contributor reads this in 90 seconds and understands why the code looks the way it does."
+ADRs are intentionally short - half a page at most. The goal is "future contributor reads this in 90 seconds and understands why the code looks the way it does."

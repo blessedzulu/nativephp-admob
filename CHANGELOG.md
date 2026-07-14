@@ -4,6 +4,12 @@ All notable changes to this project will be documented here. Format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-07-14
+
+### Changed
+
+- iOS is now verified on real hardware (1.3.2 had been exercised on the iOS Simulator). Documentation reflects the stable, both-platform status: removed the per-section pre-release version tags and the "iOS untested on hardware" caveats from the README, and rewrote the stale "Phase 3 / not implemented" header comment in the iOS source. No functional code changes.
+
 ## [1.3.2] - 2026-07-06
 
 First stable release. The beta suffix is dropped now that all five ad formats
@@ -139,7 +145,7 @@ Polish pass before the Marketplace/v1.0 push.
 
 Ships the two compliance surfaces (Phases 7 + 8): real UMP consent and real iOS App Tracking Transparency. With this release every previously-stubbed bridge function is real - only iOS device verification remains outstanding.
 
-### Added — UMP consent
+### Added - UMP consent
 
 - **Real UMP (User Messaging Platform) consent implementation on Android.** The five `Admob::ump()` methods are now backed by Google's UMP SDK: `requestConsentInfo()` runs `requestConsentInfoUpdate`, `showFormIfRequired()` runs `loadAndShowConsentFormIfRequired`, and `canRequestAds()` / `status()` / `reset()` read and reset live consent state. This removes the need for the `Admob::setCanRequestAds(true)` test bypass - the real consent flow now drives the `show()`-time gate.
 - **Real UMP implementation on iOS** using `GoogleUserMessagingPlatform`. Same surface. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
@@ -149,7 +155,7 @@ Ships the two compliance surfaces (Phases 7 + 8): real UMP consent and real iOS 
 - `ConsentFormShown` is dispatched only when a form is actually required (status `REQUIRED`), not on every `showFormIfRequired()` call.
 - New `consent.ump_debug_geography` config key for discoverability (the native layer reads the env var directly).
 
-### Added — iOS ATT
+### Added - iOS ATT
 
 - **Real iOS App Tracking Transparency (ATT) implementation.** `Admob::att()->requestAuthorization()` now presents Apple's tracking prompt via `ATTrackingManager.requestTrackingAuthorization`, dispatching `TrackingAuthorizationGranted` or `TrackingAuthorizationDenied` on completion. `Admob::att()->status()` maps `ATTrackingManager.trackingAuthorizationStatus` to `authorized` / `denied` / `restricted` / `notDetermined`. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
 - Android `AttRequest` / `AttStatus` are safe no-ops (the PHP `Att` layer already short-circuits to `unsupported` on non-iOS via the `Platform` bridge check, so these are never invoked there). `NSUserTrackingUsageDescription` is already declared in the manifest's `info_plist`; `AppTrackingTransparency` is a system framework, auto-linked on import - no CocoaPods entry needed.
@@ -215,7 +221,7 @@ Ships the two compliance surfaces (Phases 7 + 8): real UMP consent and real iOS 
 
 - **`post_compile` substitution hook** (`nativephp:admob:substitute-placeholders`). NativePHP's compiler writes `${ADMOB_APP_ID}` verbatim into `AndroidManifest.xml` / `Info.plist` rather than resolving it from `getenv()`. The new console command runs after every `native:run` / `native:build` and rewrites known placeholders against the current env. Without it the AdMob SDK fails at boot with "Missing application ID".
 - **Real Banner ad implementation on Android.** `Admob::banner('slot')->load()->show()` now renders a Google AdMob banner via `AdView`, attached to the activity's root view as an overlay. Position can be `'top'` or `'bottom'`. Lifecycle (pause/resume/destroy) is managed via NativePHP's lifecycle hooks.
-- **Real Banner ad implementation on iOS.** `BannerView` (the iOS v13+ rename of `GADBannerView`) wired to the key window via Auto Layout. Following Google's canonical `developers.google.com/admob/ios/banner` reference. **iOS is shipped untested on real hardware — please report issues at the GitHub issue tracker.**
+- **Real Banner ad implementation on iOS.** `BannerView` (the iOS v13+ rename of `GADBannerView`) wired to the key window via Auto Layout. Following Google's canonical `developers.google.com/admob/ios/banner` reference. **iOS is shipped untested on real hardware - please report issues at the GitHub issue tracker.**
 - `BannerRegistry` (Android + iOS) keyed by slot name, holding both the ad view and its attachment container.
 - `BannerLifecycle` (Android + iOS) subscribing to `NativePHPLifecycle` events / `NotificationCenter` notifications so banners pause / resume / clean up correctly.
 - Banner-side event dispatch for `AdLoaded`, `AdFailedToLoad`, `AdImpression`, `AdClicked`, `AdShown` so Livewire `#[OnNative]` listeners receive ad lifecycle callbacks.
