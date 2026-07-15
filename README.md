@@ -14,8 +14,6 @@ await ad.load();
 await ad.show();
 ```
 
-> **Stable.** All five ad formats, UMP consent, iOS App Tracking Transparency, the JavaScript API, and the `<admob-banner>` Web Component are implemented and verified on real Android and iOS hardware, with platform-aware (per-Android/iOS) ad unit and app ID resolution. Found a bug? Open an issue on the [tracker](https://github.com/blessedzulu/nativephp-admob/issues).
-
 ## Features
 
 - Five ad formats: banner, interstitial, rewarded, rewarded interstitial, app open
